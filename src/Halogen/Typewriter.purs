@@ -5,22 +5,22 @@ import Prelude hiding (div)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (get)
 import Data.Foldable (foldMap)
-import Data.Int (toNumber)
 import Data.Lens (view, (%=), (.=))
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Newtype (unwrap)
 import Data.String (null, splitAt)
 import Data.String.CodeUnits (charAt, length, singleton)
 import Data.Time.Duration (Milliseconds(..))
+import Effect (Effect)
 import Effect.Aff (delay, forkAff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
+import Effect.Random (randomRange)
 import Halogen (Component, defaultEval, mkComponent, mkEval, raise, subscribe)
 import Halogen.HTML (span_, text)
 import Halogen.Subscription (create, notify)
 import Halogen.Typewriter.Lens (cursorHidden, deleteDelay, mode, outputText, pauseDelay, typeDelay, words)
-
--- TODO: Add typing delay jitter.
 
 -- | Configuration to initialize 'typewriter'.
 type Input =
@@ -36,6 +36,9 @@ type Input =
   , cursorDelay :: Milliseconds
   -- | The cursor to display. Use 'Nothing' to hide it.
   , cursor :: Maybe Char
+  -- | Used to make the typing/deleting speed a bit more randomized.
+  -- | The result of this function is multiplied by the typing/deleting delay.
+  , jitter :: Effect Number
   }
 
 -- | Internal state for 'typewriter'.
@@ -58,6 +61,9 @@ type State =
   , cursor :: Maybe Char
   -- | Current cursor visibility. Used for the blinking effect.
   , cursorHidden :: Boolean
+  -- | Used to make the typing/deleting speed a bit more randomized.
+  -- | The result of this function is multiplied by the typing/deleting delay.
+  , jitter :: Effect Number
   }
 
 -- | Current typewriter mode.
@@ -81,11 +87,12 @@ data Action
 defaultTypewriter :: Input
 defaultTypewriter =
   { words: mempty
-  , typeDelay: Milliseconds $ toNumber 140
-  , deleteDelay: Milliseconds $ toNumber 100
-  , pauseDelay: Milliseconds $ toNumber 700
-  , cursorDelay: Milliseconds $ toNumber 900
+  , typeDelay: Milliseconds 140.0
+  , deleteDelay: Milliseconds 100.0
+  , pauseDelay: Milliseconds 700.0
+  , cursorDelay: Milliseconds 900.0
   , cursor: Just '|'
+  , jitter: randomRange 0.75 1.25
   }
 
 -- | Possible outputs for 'typewriter'.
@@ -109,6 +116,7 @@ typewriter = mkComponent { initialState, render, eval }
     , mode: Typing
     , cursor: input.cursor
     , cursorHidden: false
+    , jitter: input.jitter
     }
   eval = mkEval (defaultEval { handleAction = handleAction, initialize = Just Initialize })
 
@@ -124,10 +132,11 @@ typewriter = mkComponent { initialState, render, eval }
       void $ liftAff $ forkAff $ forever do
         delay state.cursorDelay
         liftEffect $ notify listener ToggleCursor
-      handleAction Update
+      forever $ handleAction Update
     ToggleCursor -> cursorHidden %= not
     Update -> do
-      let sleep = liftAff <<< delay <<< flip view state
+      coefficient <- liftEffect $ state.jitter
+      let sleep = liftAff <<< delay <<< Milliseconds <<< (_ * coefficient) <<< unwrap <<< flip view state
       case head state.words of
         Nothing -> raise Finished
         Just word -> do
@@ -152,4 +161,3 @@ typewriter = mkComponent { initialState, render, eval }
                 -- Remove the last letter of outputText.
                 -- It's unfortunate the 'init' function doesn't exist for strings!
                 outputText .= (splitAt (length state.outputText - 1) state.outputText).before
-      handleAction Update
