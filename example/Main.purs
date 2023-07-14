@@ -27,6 +27,9 @@ component =
     , eval: mkEval defaultEval
     }
   where
-  render _ = slot_ (Proxy :: Proxy "typewriter") 0 typewriter typewriterInput
+  render _ =
+    -- See the official guide on how to use child components:
+    -- https://purescript-halogen.github.io/purescript-halogen/guide/05-Parent-Child-Components.html
+    slot_ (Proxy :: Proxy "typewriter") 0 typewriter typewriterInput
   typewriterInput =
     defaultTypewriter $ cycle $ fromFoldable [ "hello", "world!" ]

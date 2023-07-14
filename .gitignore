@@ -6,6 +6,7 @@ node_modules
 
 # Generated files
 .psci
+.psc-ide-port
 .cache
 output
 public/index.js
