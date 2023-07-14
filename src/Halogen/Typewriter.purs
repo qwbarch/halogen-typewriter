@@ -2,6 +2,7 @@ module Halogen.Typewriter where
 
 import Prelude hiding (div)
 
+import CSS (absolute, position, relative)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (get)
 import Data.Foldable (foldMap)
@@ -9,7 +10,7 @@ import Data.Lens (view, (%=), (.=))
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
-import Data.String (null, splitAt)
+import Data.String (null, take)
 import Data.String.CodeUnits (charAt, length, singleton)
 import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
@@ -17,8 +18,10 @@ import Effect.Aff (delay, forkAff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
 import Effect.Random (randomRange)
-import Halogen (Component, defaultEval, mkComponent, mkEval, raise, subscribe)
-import Halogen.HTML (span_, text)
+import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval, raise, subscribe)
+import Halogen.HTML (div, span, text)
+import Halogen.HTML.CSS (style)
+import Halogen.HTML.Properties (class_)
 import Halogen.Subscription (create, notify)
 import Halogen.Typewriter.Lens (cursorHidden, deleteDelay, mode, outputText, pauseDelay, typeDelay, words)
 
@@ -37,7 +40,7 @@ type Input =
   -- | The cursor to display. Use 'Nothing' to hide it.
   , cursor :: Maybe Char
   -- | Used to make the typing/deleting speed a bit more randomized.
-  -- | The result of this function is multiplied by the typing/deleting delay.
+  -- | The result of this function is multiplied by the typing delay.
   , jitter :: Effect Number
   }
 
@@ -62,7 +65,7 @@ type State =
   -- | Current cursor visibility. Used for the blinking effect.
   , cursorHidden :: Boolean
   -- | Used to make the typing/deleting speed a bit more randomized.
-  -- | The result of this function is multiplied by the typing/deleting delay.
+  -- | The result of this function is multiplied by the typing delay.
   , jitter :: Effect Number
   }
 
@@ -87,12 +90,12 @@ data Action
 defaultTypewriter :: Input
 defaultTypewriter =
   { words: mempty
-  , typeDelay: Milliseconds 140.0
-  , deleteDelay: Milliseconds 100.0
-  , pauseDelay: Milliseconds 700.0
-  , cursorDelay: Milliseconds 900.0
+  , typeDelay: Milliseconds 60.0
+  , deleteDelay: Milliseconds 20.0
+  , pauseDelay: Milliseconds 900.0
+  , cursorDelay: Milliseconds 700.0
   , cursor: Just '|'
-  , jitter: randomRange 0.75 1.25
+  , jitter: randomRange 0.9 1.1
   }
 
 -- | Possible outputs for 'typewriter'.
@@ -120,10 +123,20 @@ typewriter = mkComponent { initialState, render, eval }
     }
   eval = mkEval (defaultEval { handleAction = handleAction, initialize = Just Initialize })
 
-  render state = span_
-    [ text state.outputText
-    , span_ [ text $ if state.cursorHidden then "" else foldMap singleton state.cursor ]
-    ]
+  -- The defined class names do nothing by default.
+  -- These are for the user's convenience, if they want to change styles for the respective classes.
+  render state =
+    div
+      [ class_ (ClassName "typewriter"), style $ position relative ]
+      [ span
+          [ class_ (ClassName "typewriter-text") ]
+          [ text state.outputText ]
+      , span
+          [ class_ (ClassName "typewriter-cursor")
+          , style $ position absolute
+          ]
+          [ text $ if state.cursorHidden then "" else foldMap singleton state.cursor ]
+      ]
 
   handleAction action = get >>= \state -> case action of
     Initialize -> do
@@ -132,11 +145,10 @@ typewriter = mkComponent { initialState, render, eval }
       void $ liftAff $ forkAff $ forever do
         delay state.cursorDelay
         liftEffect $ notify listener ToggleCursor
-      forever $ handleAction Update
+      handleAction Update
     ToggleCursor -> cursorHidden %= not
     Update -> do
-      coefficient <- liftEffect $ state.jitter
-      let sleep = liftAff <<< delay <<< Milliseconds <<< (_ * coefficient) <<< unwrap <<< flip view state
+      let sleep modifyDelay = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< flip view state
       case head state.words of
         Nothing -> raise Finished
         Just word -> do
@@ -148,16 +160,18 @@ typewriter = mkComponent { initialState, render, eval }
                   -- Delete the current word from state.words.
                   words %= fromMaybe mempty <<< tail
                   mode .= Deleting
-                  sleep pauseDelay
+                  sleep identity pauseDelay
                 Just letter -> do
-                  sleep typeDelay
+                  coefficient <- liftEffect $ state.jitter
+                  sleep (_ * coefficient) typeDelay
                   -- Add the next letter to outputText.
                   outputText %= (_ <> singleton letter)
             Deleting ->
               -- When outputText is empty, start typing.
               if null state.outputText then mode .= Typing
               else do
-                sleep deleteDelay
+                sleep identity deleteDelay
                 -- Remove the last letter of outputText.
                 -- It's unfortunate the 'init' function doesn't exist for strings!
-                outputText .= (splitAt (length state.outputText - 1) state.outputText).before
+                outputText .= take (length state.outputText - 1) state.outputText
+          handleAction Update
