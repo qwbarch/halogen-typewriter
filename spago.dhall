@@ -1,5 +1,6 @@
 { name = "halogen-typewriter"
-, dependencies = [ "console", "effect", "prelude" ]
+, dependencies =
+  [ "datetime", "effect", "halogen", "lists", "prelude" ]
 , packages = ./packages.dhall
-, sources = [ "src/**/*.purs" ]
+, sources = [ "src/**/*.purs", "example/**/*.purs" ]
 }

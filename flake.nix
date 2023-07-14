@@ -19,8 +19,6 @@
               easy-ps.spago
               easy-ps.purescript-language-server
               easy-ps.purs-tidy
-              #pkgs.nodejs-18_x
-              #pkgs.esbuild
             ];
             shellHook = ''
               source <(spago --bash-completion-script `which spago`)

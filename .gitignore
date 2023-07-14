@@ -6,4 +6,7 @@ node_modules
 
 # Generated files
 .psci
+.cache
 output
+public/index.js
+dist/
