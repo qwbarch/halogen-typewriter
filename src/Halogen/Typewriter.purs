@@ -22,6 +22,7 @@ type State =
   , outputText :: String
   , typeDelay :: Milliseconds
   , deleteDelay :: Milliseconds
+  , pauseDelay :: Milliseconds
   , mode :: Mode
   }
 
@@ -33,6 +34,7 @@ type Input =
   { words :: List String
   , typeDelay :: Milliseconds
   , deleteDelay :: Milliseconds
+  , pauseDelay :: Milliseconds
   }
 
 defaultTypewriter :: List String -> Input
@@ -40,6 +42,7 @@ defaultTypewriter words =
   { words
   , typeDelay: Milliseconds $ toNumber 140
   , deleteDelay: Milliseconds $ toNumber 100
+  , pauseDelay: Milliseconds $ toNumber 500
   }
 
 data Output = Finished
@@ -52,6 +55,7 @@ typewriter = mkComponent { initialState, render, eval }
     , outputText: mempty
     , typeDelay: input.typeDelay
     , deleteDelay: input.deleteDelay
+    , pauseDelay: input.pauseDelay
     , mode: Typing
     }
   eval = mkEval (defaultEval { handleAction = handleAction, initialize = Just UpdateState })
@@ -63,6 +67,7 @@ typewriter = mkComponent { initialState, render, eval }
   mode = prop (Proxy :: Proxy "mode")
   typeDelay = prop (Proxy :: Proxy "typeDelay")
   deleteDelay = prop (Proxy :: Proxy "deleteDelay")
+  pauseDelay = prop (Proxy :: Proxy "pauseDelay")
 
   render state = text state.outputText
 
@@ -77,13 +82,16 @@ typewriter = mkComponent { initialState, render, eval }
             Typing ->
               case charAt (length state.outputText) word of
                 Nothing -> do
-                  mode .= Deleting
                   words %= fromMaybe mempty <<< tail
+                  mode .= Deleting
+                  sleep pauseDelay
                 Just letter -> do
                   sleep typeDelay
                   outputText %= (_ <> singleton letter)
             Deleting ->
-              if null state.outputText then mode .= Typing
+              if null state.outputText then do
+                mode .= Typing
+                sleep pauseDelay
               else do
                 sleep deleteDelay
                 outputText .= (splitAt (length state.outputText - 1) state.outputText).before
