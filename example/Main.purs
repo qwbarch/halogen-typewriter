@@ -2,6 +2,7 @@ module Main where
 
 import Prelude
 
+import Data.Lens ((.~))
 import Data.List.Lazy (cycle, fromFoldable)
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
@@ -9,6 +10,7 @@ import Halogen (Component, defaultEval, mkComponent, mkEval)
 import Halogen.Aff (awaitBody, runHalogenAff)
 import Halogen.HTML (slot_)
 import Halogen.Typewriter (defaultTypewriter, typewriter)
+import Halogen.Typewriter.Lens (words)
 import Halogen.VDom.Driver (runUI)
 import Type.Prelude (Proxy(..))
 
@@ -32,4 +34,5 @@ component =
     -- https://purescript-halogen.github.io/purescript-halogen/guide/05-Parent-Child-Components.html
     slot_ (Proxy :: Proxy "typewriter") 0 typewriter typewriterInput
   typewriterInput =
-    defaultTypewriter $ cycle $ fromFoldable [ "hello", "world!" ]
+    defaultTypewriter
+      # words .~ (cycle $ fromFoldable [ "hello", "world!" ])

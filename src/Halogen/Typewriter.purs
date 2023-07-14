@@ -78,9 +78,9 @@ data Action
   | ToggleCursor
 
 -- | Default typewriter 'Input' parameters.
-defaultTypewriter :: List String -> Input
-defaultTypewriter words =
-  { words
+defaultTypewriter :: Input
+defaultTypewriter =
+  { words: mempty
   , typeDelay: Milliseconds $ toNumber 140
   , deleteDelay: Milliseconds $ toNumber 100
   , pauseDelay: Milliseconds $ toNumber 700
