@@ -7,7 +7,6 @@ import Control.Monad.State (get)
 import Data.Foldable (foldMap)
 import Data.Int (toNumber)
 import Data.Lens (view, (%=), (.=))
-import Data.Lens.Record (prop)
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String (null, splitAt)
@@ -19,33 +18,66 @@ import Effect.Class (liftEffect)
 import Halogen (Component, defaultEval, mkComponent, mkEval, raise, subscribe)
 import Halogen.HTML (span_, text)
 import Halogen.Subscription (create, notify)
-import Type.Prelude (Proxy(..))
+import Halogen.Typewriter.Lens (cursorHidden, deleteDelay, mode, outputText, pauseDelay, typeDelay, words)
 
-type State =
-  { words :: List String
-  , outputText :: String
+-- TODO: Add typing delay jitter.
+
+-- | Configuration to initialize 'typewriter'.
+type Input =
+  { -- | Words for 'typewriter' to type.
+    words :: List String
+  -- | Delay after typing a letter.
   , typeDelay :: Milliseconds
+  -- | Delay after deleting a letter.
   , deleteDelay :: Milliseconds
+  -- | Delay a word is fully typed out.
   , pauseDelay :: Milliseconds
+  -- | Delay in between showing/hiding the cursor.
   , cursorDelay :: Milliseconds
-  , mode :: Mode
+  -- | The cursor to display. Use 'Nothing' to hide it.
   , cursor :: Maybe Char
+  }
+
+-- | Internal state for 'typewriter'.
+type State =
+  { -- | Words for 'typewriter' to type.
+    words :: List String
+  -- | The currently displayed text.
+  , outputText :: String
+  -- | Delay after typing a letter.
+  , typeDelay :: Milliseconds
+  -- | Delay after deleting a letter.
+  , deleteDelay :: Milliseconds
+  -- | Delay a word is fully typed out.
+  , pauseDelay :: Milliseconds
+  -- | Delay in between showing/hiding the cursor.
+  , cursorDelay :: Milliseconds
+  -- | Whether the typewriter should be typing or deleting.
+  , mode :: Mode
+  -- | The cursor to display. Use 'Nothing' to hide it.
+  , cursor :: Maybe Char
+  -- | Current cursor visibility. Used for the blinking effect.
   , cursorHidden :: Boolean
   }
 
-data Mode = Typing | Deleting
+-- | Current typewriter mode.
+data Mode
+  -- | The typewriter is currently typing letters.
+  = Typing
+  -- | The typewriter is currently deleting letters.
+  | Deleting
 
-data Action = Initialize | Update | ToggleCursor
+-- | Internal actions for 'typewriter'.
+data Action
+  -- | Start the 'typewriter'. This should only be invoked internally.
+  -- | Running this on your own has unintended consequences.
+  = Initialize
+  -- | Update the typewriter's state.
+  | Update
+  -- | Toggle the cursor's visibility.
+  | ToggleCursor
 
-type Input =
-  { words :: List String
-  , typeDelay :: Milliseconds
-  , deleteDelay :: Milliseconds
-  , pauseDelay :: Milliseconds
-  , cursorDelay :: Milliseconds
-  , cursor :: Maybe Char
-  }
-
+-- | Default typewriter 'Input' parameters.
 defaultTypewriter :: List String -> Input
 defaultTypewriter words =
   { words
@@ -56,8 +88,14 @@ defaultTypewriter words =
   , cursor: Just '|'
   }
 
-data Output = Finished
+-- | Possible outputs for 'typewriter'.
+data Output =
+  -- | Emitted after 'State.words' becomes empty.
+  -- | If 'State.words' is an infinite list, this will never be emitted.
+  Finished
 
+-- | Typewriter component. For more info on how to use this as a child component, see here:
+-- | https://purescript-halogen.github.io/purescript-halogen/guide/05-Parent-Child-Components.html
 typewriter :: ∀ q m. MonadAff m => Component q Input Output m
 typewriter = mkComponent { initialState, render, eval }
   where
@@ -73,16 +111,6 @@ typewriter = mkComponent { initialState, render, eval }
     , cursorHidden: false
     }
   eval = mkEval (defaultEval { handleAction = handleAction, initialize = Just Initialize })
-
-  -- Lenses for 'State' properties.
-  -- Unfortunately PureScript doesn't have a template-haskell equivalent, so these need to be manually defined.
-  words = prop (Proxy :: Proxy "words")
-  outputText = prop (Proxy :: Proxy "outputText")
-  mode = prop (Proxy :: Proxy "mode")
-  typeDelay = prop (Proxy :: Proxy "typeDelay")
-  deleteDelay = prop (Proxy :: Proxy "deleteDelay")
-  pauseDelay = prop (Proxy :: Proxy "pauseDelay")
-  cursorHidden = prop (Proxy :: Proxy "cursorHidden")
 
   render state = span_
     [ text state.outputText
@@ -105,17 +133,23 @@ typewriter = mkComponent { initialState, render, eval }
         Just word -> do
           case state.mode of
             Typing ->
+              -- Gets the next letter of the word.
               case charAt (length state.outputText) word of
                 Nothing -> do
+                  -- Delete the current word from state.words.
                   words %= fromMaybe mempty <<< tail
                   mode .= Deleting
                   sleep pauseDelay
                 Just letter -> do
                   sleep typeDelay
+                  -- Add the next letter to outputText.
                   outputText %= (_ <> singleton letter)
             Deleting ->
+              -- When outputText is empty, start typing.
               if null state.outputText then mode .= Typing
               else do
                 sleep deleteDelay
+                -- Remove the last letter of outputText.
+                -- It's unfortunate the 'init' function doesn't exist for strings!
                 outputText .= (splitAt (length state.outputText - 1) state.outputText).before
       handleAction Update
