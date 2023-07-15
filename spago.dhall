@@ -15,6 +15,7 @@
   , "profunctor-lenses"
   , "random"
   , "strings"
+  , "substitute"
   , "tailrec"
   , "transformers"
   , "typelevel-prelude"

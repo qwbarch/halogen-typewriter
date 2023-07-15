@@ -9,6 +9,7 @@ import Css (css)
 import Data.Lens ((.~))
 import Data.List.Lazy (Step(..), cycle, fromFoldable, repeat, (:))
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.String (trim)
 import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
@@ -19,6 +20,7 @@ import Halogen.HTML (code, code_, div, div_, footer, h1, h2, h3, header, p, p_, 
 import Halogen.HTML.CSS (style)
 import Halogen.Typewriter (Output, defaultTypewriter, typewriter)
 import Halogen.VDom.Driver (runUI)
+import Substitute (normalize)
 import Type.Prelude (Proxy(..))
 
 main :: Effect Unit
@@ -51,42 +53,90 @@ component =
       { title: "Quickstart"
       , description: text "Minimal example to get started:"
       , typewriter: Nothing
-      , code:
+      , code: normalize
           """
-        main :: Effect Unit
-        main = runHalogenAff do
-          body <- awaitBody
-          runUI component unit body
+          main :: Effect Unit
+          main = runHalogenAff do
+            body <- awaitBody
+            runUI component unit body
 
-        component :: ∀ q i o m. MonadAff m => Component q i o m
-        component =
-          mkComponent
-            { initialState: const unit
-            , render
-            , eval: mkEval defaultEval
-            }
-          where
-          render _ = div_ [ slot_ (Proxy :: Proxy "typewriter") 0 typewriter input ]
-          input = defaultTypewriter { words = repeat "Hello world!" }
-        """
+          component :: ∀ q i o m. MonadAff m => Component q i o m
+          component =
+            mkComponent
+              { initialState: const unit
+              , render
+              , eval: mkEval defaultEval
+              }
+            where
+            render _ = div_ [ slot_ (Proxy :: Proxy "typewriter") 0 typewriter input ]
+            input = defaultTypewriter { words = repeat "Hello world!" }
+          """
       }
 
-  minimalExample =
+  simpleExample =
     let
       input = defaultTypewriter { words = repeat "Hello world!" }
     in
       example
-        { title: "Minimal"
+        { title: "Simple"
         , description:
             div_
               [ span [ css "has-text-weight-bold" ] [ text "words" ]
               , text " is defined as a lazy list. Simply provide an infinite list to make the typewriter never stop!"
               ]
-        , code:
+        , code: normalize
             """
             defaultTypewriter { words = repeat "Hello world!" }
             """
-        , typewriter: Just $ slot_ (Proxy :: Proxy "minimal") 1 typewriter input
+        , typewriter: Just $ slot_ (Proxy :: Proxy "simple") 1 typewriter input
+        }
+
+  multipleWordsExample =
+    let
+      input =
+        defaultTypewriter
+          { words = cycle $ fromFoldable $ map (_ <> ".") $
+              [ "John"
+              , "Olivia"
+              , "Liam"
+              , "Emma"
+              , "Noah"
+              , "Charlotte"
+              , "Oliver"
+              , "Amelia"
+              ]
+          }
+    in
+      example
+        { title: "Multiple words"
+        , description:
+            span_
+              [ text "Use "
+              , span [ css "has-text-weight-bold" ] [ text "fromFoldable" ]
+              , text " to create the list, and "
+              , span [ css "has-text-weight-bold" ] [ text "cycle" ]
+              , text " to repeat it indefinitely."
+              ]
+        , code: normalize
+            """
+            defaultTypewriter
+              { words = cycle $ fromFoldable $ map (_ <> ".") $
+                  [ "John"
+                  , "Olivia"
+                  , "Liam"
+                  , "Emma"
+                  , "Noah"
+                  , "Charlotte"
+                  , "Oliver"
+                  , "Amelia"
+                  ]
+            """
+        , typewriter:
+            Just $
+              span_
+                [ text "My name is "
+                , slot_ (Proxy :: Proxy "multiple-words") 2 typewriter input
+                ]
         }
 
   example template =
@@ -108,12 +158,7 @@ component =
               maxHeight $ vh 40.0
           ]
           [ pre
-              [ style $ do
-                  textWhitespace whitespacePreWrap
-                  paddingLeft nil
-                  paddingTop nil
-                  paddingBottom nil
-              ]
+              [ style $ textWhitespace whitespacePreWrap ]
               [ code_ [ text template.code ] ]
           ]
       ]
@@ -132,7 +177,8 @@ component =
                           [ slot_ (Proxy :: Proxy "subtitle") 0 typewriter subtitle
                           ]
                       , quickstartExample
-                      , minimalExample
+                      , simpleExample
+                      , multipleWordsExample
                       ]
                   ]
               ]
