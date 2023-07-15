@@ -2,7 +2,7 @@ module Halogen.Typewriter where
 
 import Prelude hiding (div)
 
-import CSS (absolute, position, relative)
+import CSS (opacity)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (get)
 import Data.Foldable (foldMap)
@@ -19,7 +19,7 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
 import Effect.Random (randomRange)
 import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval, raise, subscribe)
-import Halogen.HTML (div, span, text)
+import Halogen.HTML (span, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
 import Halogen.Subscription (create, notify)
@@ -126,16 +126,16 @@ typewriter = mkComponent { initialState, render, eval }
   -- The defined class names do nothing by default.
   -- These are for the user's convenience, if they want to change styles for the respective classes.
   render state =
-    div
-      [ class_ (ClassName "typewriter"), style $ position relative ]
+    span
+      [ class_ (ClassName "typewriter") ]
       [ span
           [ class_ (ClassName "typewriter-text") ]
           [ text state.outputText ]
       , span
           [ class_ (ClassName "typewriter-cursor")
-          , style $ position absolute
+          , style $ when (state.cursorHidden) $ opacity 0.0
           ]
-          [ text $ if state.cursorHidden then "" else foldMap singleton state.cursor ]
+          [ text $ foldMap singleton state.cursor ]
       ]
 
   handleAction action = get >>= \state -> case action of
