@@ -7,9 +7,10 @@ import CSS.Overflow (overflow, overflowAuto)
 import Data.Array (singleton)
 import Data.List.Lazy (cycle, fromFoldable, repeat, replicate)
 import Data.Maybe (Maybe(..))
-import Data.Time.Duration (Milliseconds(..))
+import Data.Time.Duration (Milliseconds(..), Seconds(..), fromDuration)
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
+import Effect.Random (randomRange)
 import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval)
 import Halogen.Aff (awaitBody, runHalogenAff)
 import Halogen.HTML (IProp, code_, div, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
@@ -149,7 +150,7 @@ component =
 
   finiteRunsExample =
     let
-      input = defaultTypewriter { words = replicate 2 "I will only type this sentence twice..." }
+      input = defaultTypewriter { words = replicate 2 "I will only type this sentence twice." }
     in
       example
         { title: "Finite runs"
@@ -161,9 +162,62 @@ component =
               ]
         , code: normalize
             """
-            defaultTypewriter { words = replicate 2 "I will only type this sentence twice..." }
+            defaultTypewriter { words = replicate 2 "I will only type this sentence twice." }
             """
         , typewriter: Just $ slot_ (Proxy :: Proxy "finite-runs") 3 typewriter input
+        }
+
+  typingSpeedExample =
+    let
+      input =
+        defaultTypewriter
+          { words = repeat "I take my time when I type..."
+          , typeDelay = Milliseconds 400.0
+          , deleteDelay = Milliseconds 100.0
+          , pauseDelay = fromDuration $ Seconds 1.0
+          }
+    in
+      example
+        { title: "Typing speed"
+        , description: text "You can adjust the typing, deleting, and pause (in between words) delay."
+        , code: normalize
+            """
+            defaultTypewriter
+              { words = repeat "I take my time when I type..."
+              , typeDelay = Milliseconds 400.0
+              , deleteDelay = Milliseconds 100.0
+              , pauseDelay = fromDuration $ Seconds 1.0
+              }
+            """
+        , typewriter: Just $ slot_ (Proxy :: Proxy "typing-speed") 4 typewriter input
+        }
+
+  jitterExample =
+    let
+      input =
+        defaultTypewriter
+          { words = repeat "The Cow King is a Hell Bovine monarch that is associated with The Secret Cow Level."
+          , jitter = randomRange 0.5 4.0
+          }
+    in
+      example
+        { title: "Jitter"
+        , description:
+            span_
+              [ text "A jitter range of "
+              , bold "(0.5, 4.0)"
+              , text " means the typewriter waits for "
+              , code_ [ text "typeDelay * randomRange(0.5, 4.0)" ]
+              , text " in between letters."
+              ]
+        , code: normalize
+            """
+            defaultTypewriter
+              { words = repeat "The Cow King is a Hell Bovine monarch that is associated with The Secret Cow Level."
+              , jitter = randomRange 0.5 4.0
+              }
+            """
+        , typewriter: Just $ slot_ (Proxy :: Proxy "jitter") 5 typewriter input
         }
 
   example template =
@@ -207,6 +261,8 @@ component =
                       , singleWordExample
                       , multipleWordsExample
                       , finiteRunsExample
+                      , typingSpeedExample
+                      , jitterExample
                       ]
                   ]
               ]
