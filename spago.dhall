@@ -1,6 +1,7 @@
 { name = "halogen-typewriter"
 , dependencies =
   [ "aff"
+  , "arrays"
   , "css"
   , "datetime"
   , "effect"

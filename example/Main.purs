@@ -2,23 +2,20 @@ module Main where
 
 import Prelude hiding (div)
 
-import CSS (marginLeft, maxHeight, minWidth, nil, padding, paddingBottom, paddingLeft, paddingTop, rem, textWhitespace, vh, whitespacePreWrap)
-import CSS.Common (none)
+import CSS (maxHeight, textWhitespace, vh, whitespacePreWrap)
 import CSS.Overflow (overflow, overflowAuto)
 import Css (css)
-import Data.Lens ((.~))
-import Data.List.Lazy (Step(..), cycle, fromFoldable, repeat, (:))
-import Data.Maybe (Maybe(..), fromMaybe)
-import Data.String (trim)
+import Data.Array (singleton)
+import Data.List.Lazy (cycle, fromFoldable, repeat, replicate)
+import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class (liftEffect)
-import Halogen (Component, Slot, defaultEval, mkComponent, mkEval)
+import Halogen (Component, defaultEval, mkComponent, mkEval)
 import Halogen.Aff (awaitBody, runHalogenAff)
-import Halogen.HTML (code, code_, div, div_, footer, h1, h2, h3, header, p, p_, pre, pre_, section, slot_, span, span_, text)
+import Halogen.HTML (code_, div, div_, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
 import Halogen.HTML.CSS (style)
-import Halogen.Typewriter (Output, defaultTypewriter, typewriter)
+import Halogen.Typewriter (defaultTypewriter, typewriter)
 import Halogen.VDom.Driver (runUI)
 import Substitute (normalize)
 import Type.Prelude (Proxy(..))
@@ -36,6 +33,8 @@ component =
     , eval: mkEval defaultEval
     }
   where
+  bold = span [ css "has-text-weight-bold" ] <<< singleton <<< text
+
   subtitle =
     defaultTypewriter
       { words = cycle $ fromFoldable
@@ -73,22 +72,27 @@ component =
           """
       }
 
-  simpleExample =
+  singleWordExample =
     let
       input = defaultTypewriter { words = repeat "Hello world!" }
     in
       example
-        { title: "Simple"
+        { title: "Single word"
         , description:
-            div_
-              [ span [ css "has-text-weight-bold" ] [ text "words" ]
-              , text " is defined as a lazy list. Simply provide an infinite list to make the typewriter never stop!"
+            span_
+              [ bold "words"
+              , span_ [ text " is defined as a lazy list. Once the list is finished, it'll stop typing." ]
+              , p_
+                  [ text "Simply provide an infinite list with "
+                  , bold "repeat"
+                  , text " and it'll never stop!"
+                  ]
               ]
         , code: normalize
             """
             defaultTypewriter { words = repeat "Hello world!" }
             """
-        , typewriter: Just $ slot_ (Proxy :: Proxy "simple") 1 typewriter input
+        , typewriter: Just $ slot_ (Proxy :: Proxy "single-word") 1 typewriter input
         }
 
   multipleWordsExample =
@@ -112,9 +116,9 @@ component =
         , description:
             span_
               [ text "Use "
-              , span [ css "has-text-weight-bold" ] [ text "fromFoldable" ]
+              , bold "fromFoldable"
               , text " to create the list, and "
-              , span [ css "has-text-weight-bold" ] [ text "cycle" ]
+              , bold "cycle"
               , text " to repeat it indefinitely."
               ]
         , code: normalize
@@ -130,6 +134,7 @@ component =
                   , "Oliver"
                   , "Amelia"
                   ]
+              }
             """
         , typewriter:
             Just $
@@ -137,6 +142,25 @@ component =
                 [ text "My name is "
                 , slot_ (Proxy :: Proxy "multiple-words") 2 typewriter input
                 ]
+        }
+
+  finiteRunsExample =
+    let
+      input = defaultTypewriter { words = replicate 3 "I'm getting tired of typing this..." }
+    in
+      example
+        { title: "Finite runs"
+        , description:
+            span_
+              [ text "You probably get it by now. The number of times a word is typed is based on what "
+              , bold "words"
+              , text " contains."
+              ]
+        , code: normalize
+            """
+            defaultTypewriter { words = replicate 3 "I'm getting tired of typing this..." }
+            """
+        , typewriter: Just $ slot_ (Proxy :: Proxy "finite-runs") 3 typewriter input
         }
 
   example template =
@@ -177,8 +201,9 @@ component =
                           [ slot_ (Proxy :: Proxy "subtitle") 0 typewriter subtitle
                           ]
                       , quickstartExample
-                      , simpleExample
+                      , singleWordExample
                       , multipleWordsExample
+                      , finiteRunsExample
                       ]
                   ]
               ]
