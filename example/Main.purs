@@ -10,10 +10,11 @@ import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..), Seconds(..), fromDuration)
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
+import Effect.Class (liftEffect)
 import Effect.Random (randomRange)
 import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval)
 import Halogen.Aff (awaitBody, runHalogenAff)
-import Halogen.HTML (IProp, code_, div, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
+import Halogen.HTML (IProp, code, code_, div, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
 import Halogen.Typewriter (defaultTypewriter, typewriter)
@@ -22,21 +23,32 @@ import Substitute (normalize)
 import Type.Prelude (Proxy(..))
 
 main :: Effect Unit
-main = runHalogenAff do
-  body <- awaitBody
-  runUI component unit body
+main = runHalogenAff $ runUI component unit =<< awaitBody
+
+-- | Run the HighlightJS syntax highlighter.
+foreign import highlightAll :: Effect Unit
 
 css :: ∀ r i. String -> IProp (class :: String | r) i
 css = class_ <<< ClassName
+
+data Action = Initialize
 
 component :: ∀ q i o m. MonadAff m => Component q i o m
 component =
   mkComponent
     { initialState: const unit
     , render
-    , eval: mkEval defaultEval
+    , eval:
+        mkEval $
+          defaultEval
+            { handleAction = handleAction
+            , initialize = Just Initialize
+            }
     }
   where
+  handleAction = case _ of
+    Initialize -> liftEffect highlightAll
+
   bold = span [ css "has-text-weight-bold" ] <<< singleton <<< text
 
   subtitle =
@@ -240,7 +252,7 @@ component =
           ]
           [ pre
               [ style $ textWhitespace whitespacePreWrap ]
-              [ code_ [ text template.code ] ]
+              [ code [ css "language-haskell" ] [ text template.code ] ]
           ]
       ]
 

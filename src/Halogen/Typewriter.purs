@@ -144,11 +144,12 @@ typewriter = mkComponent { initialState, render, eval }
   handleAction action = get >>= \state -> case action of
     Initialize -> do
       { emitter, listener } <- liftEffect create
+      let dispatch = liftEffect <<< notify listener
       void $ subscribe emitter
       void $ liftAff $ forkAff $ forever do
         delay state.cursorDelay
-        liftEffect $ notify listener ToggleCursor
-      handleAction Update
+        dispatch ToggleCursor
+      void $ liftAff $ forkAff $ dispatch Update
     ToggleCursor -> cursorHidden %= if state.running then not else const true
     Update -> do
       let sleep modifyDelay = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< flip view state
