@@ -55,7 +55,7 @@ component =
     defaultTypewriter
       { words = cycle $ fromFoldable
           [ "Is a simple typewriter."
-          , "Is made in Halogen."
+          , "Is made with Halogen."
           , "Is made in PureScript."
           , "Is a tiny library."
           ]

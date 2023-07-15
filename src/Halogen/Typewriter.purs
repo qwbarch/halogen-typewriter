@@ -120,7 +120,7 @@ typewriter = mkComponent { initialState, render, eval }
     , cursorDelay: input.cursorDelay
     , mode: Typing
     , cursor: input.cursor
-    , cursorHidden: false
+    , cursorHidden: true
     , jitter: input.jitter
     , running: true
     }
