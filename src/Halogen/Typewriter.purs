@@ -23,7 +23,7 @@ import Halogen.HTML (span, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
 import Halogen.Subscription (create, notify)
-import Halogen.Typewriter.Lens (cursorHidden, deleteDelay, mode, outputText, pauseDelay, typeDelay, words)
+import Halogen.Typewriter.Lens (cursorHidden, deleteDelay, mode, outputText, pauseDelay, running, typeDelay, words)
 
 -- | Configuration to initialize 'typewriter'.
 type Input =
@@ -67,6 +67,8 @@ type State =
   -- | Used to make the typing/deleting speed a bit more randomized.
   -- | The result of this function is multiplied by the typing delay.
   , jitter :: Effect Number
+  -- | Whether the typewriter is running or not.
+  , running :: Boolean
   }
 
 -- | Current typewriter mode.
@@ -120,6 +122,7 @@ typewriter = mkComponent { initialState, render, eval }
     , cursor: input.cursor
     , cursorHidden: false
     , jitter: input.jitter
+    , running: true
     }
   eval = mkEval (defaultEval { handleAction = handleAction, initialize = Just Initialize })
 
@@ -146,11 +149,15 @@ typewriter = mkComponent { initialState, render, eval }
         delay state.cursorDelay
         liftEffect $ notify listener ToggleCursor
       handleAction Update
-    ToggleCursor -> cursorHidden %= not
+    ToggleCursor ->
+      when state.running $
+        cursorHidden %= not
     Update -> do
       let sleep modifyDelay = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< flip view state
       case head state.words of
-        Nothing -> raise Finished
+        Nothing -> do
+          running .= false
+          raise Finished
         Just word -> do
           case state.mode of
             Typing ->
