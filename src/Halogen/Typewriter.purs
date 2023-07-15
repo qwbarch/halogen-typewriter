@@ -149,9 +149,7 @@ typewriter = mkComponent { initialState, render, eval }
         delay state.cursorDelay
         liftEffect $ notify listener ToggleCursor
       handleAction Update
-    ToggleCursor ->
-      when state.running $
-        cursorHidden %= not
+    ToggleCursor -> cursorHidden %= if state.running then not else const true
     Update -> do
       let sleep modifyDelay = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< flip view state
       case head state.words of

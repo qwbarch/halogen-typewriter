@@ -149,7 +149,7 @@ component =
 
   finiteRunsExample =
     let
-      input = defaultTypewriter { words = replicate 2 "I'm getting tired of typing this..." }
+      input = defaultTypewriter { words = replicate 2 "I will only type this sentence twice..." }
     in
       example
         { title: "Finite runs"
@@ -161,7 +161,7 @@ component =
               ]
         , code: normalize
             """
-            defaultTypewriter { words = replicate 2 "I'm getting tired of typing this..." }
+            defaultTypewriter { words = replicate 2 "I will only type this sentence twice..." }
             """
         , typewriter: Just $ slot_ (Proxy :: Proxy "finite-runs") 3 typewriter input
         }
