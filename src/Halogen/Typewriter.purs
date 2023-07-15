@@ -90,8 +90,8 @@ data Action
 defaultTypewriter :: Input
 defaultTypewriter =
   { words: mempty
-  , typeDelay: Milliseconds 60.0
-  , deleteDelay: Milliseconds 20.0
+  , typeDelay: Milliseconds 100.0
+  , deleteDelay: Milliseconds 40.0
   , pauseDelay: Milliseconds 900.0
   , cursorDelay: Milliseconds 700.0
   , cursor: Just '|'
