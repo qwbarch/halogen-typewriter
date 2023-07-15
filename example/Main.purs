@@ -4,17 +4,17 @@ import Prelude hiding (div)
 
 import CSS (maxHeight, textWhitespace, vh, whitespacePreWrap)
 import CSS.Overflow (overflow, overflowAuto)
-import Css (css)
 import Data.Array (singleton)
 import Data.List.Lazy (cycle, fromFoldable, repeat, replicate)
 import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
-import Halogen (Component, defaultEval, mkComponent, mkEval)
+import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval)
 import Halogen.Aff (awaitBody, runHalogenAff)
-import Halogen.HTML (code_, div, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
+import Halogen.HTML (IProp, code_, div, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
 import Halogen.HTML.CSS (style)
+import Halogen.HTML.Properties (class_)
 import Halogen.Typewriter (defaultTypewriter, typewriter)
 import Halogen.VDom.Driver (runUI)
 import Substitute (normalize)
@@ -24,6 +24,9 @@ main :: Effect Unit
 main = runHalogenAff do
   body <- awaitBody
   runUI component unit body
+
+css :: ∀ r i. String -> IProp (class :: String | r) i
+css = class_ <<< ClassName
 
 component :: ∀ q i o m. MonadAff m => Component q i o m
 component =
@@ -146,7 +149,7 @@ component =
 
   finiteRunsExample =
     let
-      input = defaultTypewriter { words = replicate 3 "I'm getting tired of typing this..." }
+      input = defaultTypewriter { words = replicate 2 "I'm getting tired of typing this..." }
     in
       example
         { title: "Finite runs"
@@ -158,7 +161,7 @@ component =
               ]
         , code: normalize
             """
-            defaultTypewriter { words = replicate 3 "I'm getting tired of typing this..." }
+            defaultTypewriter { words = replicate 2 "I'm getting tired of typing this..." }
             """
         , typewriter: Just $ slot_ (Proxy :: Proxy "finite-runs") 3 typewriter input
         }
