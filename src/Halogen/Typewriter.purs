@@ -3,7 +3,7 @@ module Halogen.Typewriter where
 import Prelude hiding (div)
 
 import CSS (opacity)
-import Control.Monad.State (get)
+import Control.Monad.State (get, modify)
 import Data.Foldable (foldMap)
 import Data.Lens (view, (%=), (.=), (<>=))
 import Data.List.Lazy (List, head, tail)
@@ -22,7 +22,7 @@ import Halogen.HTML (span, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
 import Halogen.Subscription (create, notify)
-import Halogen.Typewriter.Lens (cursorDelay, cursorHidden, deleteDelay, mode, outputText, pauseDelay, running, typeDelay, words)
+import Halogen.Typewriter.Lens (cursorDelay, cursorHidden, deleteDelay, mode, outputText, pauseDelay, typeDelay, words)
 
 -- | Configuration to initialize 'typewriter'.
 type Input =
@@ -160,8 +160,7 @@ typewriter = mkComponent { initialState, render, eval }
         UpdateState ->
           case head state.words of
             Nothing -> do
-              running .= false
-              cursorHidden .= true
+              void $ modify $ _ { running = false, cursorHidden = true }
               raise Finished
             Just word -> do
               case state.mode of
