@@ -7,6 +7,7 @@ fi
 
 if [ ! -e "public/index.js" ]; then
   echo "index.js is missing. Please run build.sh before publishing."
+  exit 1
 fi
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -16,7 +17,7 @@ if [ "$current_branch" = "main" ]; then
     git checkout gh-pages
     find . -mindepth 1 ! -regex '^./.git\(/.*\)?' -delete
     git checkout main -- .
-    nix develop --command spago bundle-app --no-install --to public/index.js
+    nix develop --command spago bundle-app --to public/index.js
   else
     git checkout --orphan gh-pages
   fi
@@ -26,7 +27,6 @@ if [ "$current_branch" = "main" ]; then
   git add public
   git clean -fd
   git commit -am "Update github pages."
-
 
   git push origin gh-pages --force
   git checkout main
