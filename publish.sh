@@ -14,7 +14,7 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$current_branch" = "main" ]; then
   if git rev-parse --quiet --verify "gh-pages" >/dev/null; then
     git checkout gh-pages
-    find . -mindepth 1 ! -regex '^./.git(/.*)?' -delete
+    find . -mindepth 1 ! -regex '^./.git\(/.*\)?' -delete
     git checkout main -- .
     nix develop --command spago bundle-app --no-install --to public/index.js
   else
