@@ -5,7 +5,7 @@ if ! git diff-index --quiet HEAD --; then
   exit 1
 fi
 
-if [ -e "public/index.js" ]; then
+if [ ! -e "public/index.js" ]; then
   echo "index.js is missing. Please run build.sh before publishing."
 fi
 
