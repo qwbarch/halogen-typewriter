@@ -18,7 +18,6 @@ if [ "$current_branch" = "main" ]; then
     git checkout --orphan gh-pages
   fi
   
-  git add .
   rm .gitignore
   git reset
   git add public
@@ -26,6 +25,7 @@ if [ "$current_branch" = "main" ]; then
 
   mv public/* .
   rm -r public
+  rm -r .spago
 
   git add .
   git commit -am "Update github pages."
