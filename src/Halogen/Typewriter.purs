@@ -161,8 +161,7 @@ typewriter = mkComponent { initialState, render, eval }
             raise Finished
         UpdateState ->
           case head state.words of
-            Nothing -> do
-              void $ modify $ _ { running = false, cursorHidden = true }
+            Nothing -> void $ modify $ _ { running = false, cursorHidden = true }
             Just word -> do
               case state.mode of
                 Typing ->
