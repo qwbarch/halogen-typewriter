@@ -25,9 +25,8 @@ if [ "$current_branch" = "main" ]; then
 
   mv public/* .
   rm -r public
-  rm -r .spago
 
-  git add .
+  git add --all -- :!.spago
   git commit -am "Update github pages."
 
   git push origin gh-pages --force
