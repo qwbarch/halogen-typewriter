@@ -3,10 +3,9 @@ module Halogen.Typewriter where
 import Prelude hiding (div)
 
 import CSS (opacity)
-import Control.Monad.Rec.Class (forever)
 import Control.Monad.State (get)
 import Data.Foldable (foldMap)
-import Data.Lens (view, (%=), (.=))
+import Data.Lens (view, (%=), (.=), (<>=))
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Newtype (unwrap)
@@ -124,7 +123,7 @@ typewriter = mkComponent { initialState, render, eval }
     , jitter: input.jitter
     , running: true
     }
-  eval = mkEval (defaultEval { handleAction = handleAction, initialize = Just Initialize })
+  eval = mkEval defaultEval { handleAction = handleAction, initialize = Just Initialize }
 
   -- The defined class names do nothing by default.
   -- These are for the user's convenience, if they want to change styles for the respective classes.
@@ -162,6 +161,7 @@ typewriter = mkComponent { initialState, render, eval }
           case head state.words of
             Nothing -> do
               running .= false
+              cursorHidden .= true
               raise Finished
             Just word -> do
               case state.mode of
@@ -177,7 +177,7 @@ typewriter = mkComponent { initialState, render, eval }
                       coefficient <- liftEffect $ state.jitter
                       sleep (_ * coefficient) typeDelay
                       -- Add the next letter to outputText.
-                      outputText %= (_ <> singleton letter)
+                      outputText <>= singleton letter
                 Deleting ->
                   -- When outputText is empty, start typing.
                   if null state.outputText then mode .= Typing

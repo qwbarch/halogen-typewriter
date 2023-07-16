@@ -38,12 +38,10 @@ component =
   mkComponent
     { initialState: const unit
     , render
-    , eval:
-        mkEval $
-          defaultEval
-            { handleAction = handleAction
-            , initialize = Just Initialize
-            }
+    , eval: mkEval defaultEval
+        { handleAction = handleAction
+        , initialize = Just Initialize
+        }
     }
   where
   handleAction = case _ of
