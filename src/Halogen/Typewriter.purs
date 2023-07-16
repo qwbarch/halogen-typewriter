@@ -156,6 +156,7 @@ typewriter = mkComponent { initialState, render, eval }
           if state.running then do
             cursorHidden %= not
             sleep identity cursorDelay
+            handleAction UpdateCursor
           else cursorHidden .= true
         UpdateState ->
           case head state.words of
