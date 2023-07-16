@@ -156,12 +156,13 @@ typewriter = mkComponent { initialState, render, eval }
             cursorHidden %= not
             sleep identity cursorDelay
             handleAction UpdateCursor
-          else cursorHidden .= true
+          else do
+            cursorHidden .= true
+            raise Finished
         UpdateState ->
           case head state.words of
             Nothing -> do
               void $ modify $ _ { running = false, cursorHidden = true }
-              raise Finished
             Just word -> do
               case state.mode of
                 Typing ->

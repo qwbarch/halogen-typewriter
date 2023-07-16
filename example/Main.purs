@@ -48,18 +48,18 @@ component =
     Initialize -> liftEffect highlightAll
 
   bold = span [ css "has-text-weight-bold" ] <<< singleton <<< text
-
   subtitle =
     defaultTypewriter
       { words = cycle $ fromFoldable
-          [ "Is a simple typewriter."
-          , "Is made with Halogen."
-          , "Is made in PureScript."
-          , "Is a tiny library."
+          [ "a simple typewriter."
+          , "made with Halogen."
+          , "made in PureScript."
+          , "a tiny library."
           ]
       , typeDelay = Milliseconds 60.0
       , deleteDelay = Milliseconds 20.0
       }
+  typewriterHtml = slot_ (Proxy :: Proxy "typewriter") unit typewriter
 
   quickstartExample =
     example
@@ -81,6 +81,8 @@ component =
               , eval: mkEval defaultEval
               }
             where
+            -- See here for more information on how to use slot:
+            -- https://purescript-halogen.github.io/purescript-halogen/guide/05-Parent-Child-Components.html
             render _ = div_ [ slot_ (Proxy :: Proxy "typewriter") 0 typewriter input ]
             input = defaultTypewriter { words = repeat "Hello world!" }
           """
@@ -106,7 +108,7 @@ component =
             """
             defaultTypewriter { words = repeat "Hello world!" }
             """
-        , typewriter: Just $ slot_ (Proxy :: Proxy "single-word") 1 typewriter input
+        , typewriter: Just $ typewriterHtml input
         }
 
   multipleWordsExample =
@@ -150,12 +152,7 @@ component =
                   ]
               }
             """
-        , typewriter:
-            Just $
-              span_
-                [ text "My name is "
-                , slot_ (Proxy :: Proxy "multiple-words") 2 typewriter input
-                ]
+        , typewriter: Just $ span_ [ text "My name is ", typewriterHtml input ]
         }
 
   finiteRunsExample =
@@ -174,7 +171,7 @@ component =
             """
             defaultTypewriter { words = replicate 2 "I will only type this sentence twice." }
             """
-        , typewriter: Just $ slot_ (Proxy :: Proxy "finite-runs") 3 typewriter input
+        , typewriter: Just $ typewriterHtml input
         }
 
   typingSpeedExample =
@@ -199,7 +196,7 @@ component =
               , pauseDelay = fromDuration $ Seconds 1.0
               }
             """
-        , typewriter: Just $ slot_ (Proxy :: Proxy "typing-speed") 4 typewriter input
+        , typewriter: Just $ typewriterHtml input
         }
 
   jitterExample =
@@ -227,7 +224,7 @@ component =
               , jitter = randomRange 0.5 4.0
               }
             """
-        , typewriter: Just $ slot_ (Proxy :: Proxy "jitter") 5 typewriter input
+        , typewriter: Just $ typewriterHtml input
         }
 
   example template =
@@ -265,7 +262,8 @@ component =
                       [ h1 [ css "title" ] [ text "Halogen Typewriter" ]
                       , h2
                           [ css "subtitle" ]
-                          [ slot_ (Proxy :: Proxy "subtitle") 0 typewriter subtitle
+                          [ text "Is "
+                          , typewriterHtml subtitle
                           ]
                       , quickstartExample
                       , singleWordExample
