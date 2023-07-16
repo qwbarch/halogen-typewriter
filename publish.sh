@@ -5,9 +5,8 @@ if ! git diff-index --quiet HEAD --; then
   exit 1
 fi
 
-if [ -z "$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null)" ]; then
-  echo "The current branch is not tracking a remote branch. Please push your changes first."
-  exit 1
+if [ -e "public/index.js" ]; then
+  echo "index.js is missing. Please run build.sh before publishing."
 fi
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -15,17 +14,21 @@ current_branch=$(git rev-parse --abbrev-ref HEAD)
 if [ "$current_branch" = "main" ]; then
   if git rev-parse --quiet --verify "gh-pages" >/dev/null; then
     git checkout gh-pages
+    find . -mindepth 1 ! -regex '^./.git(/.*)?' -delete
+    git checkout main -- .
+    nix develop --command spago bundle-app --no-install --to public/index.js
   else
     git checkout --orphan gh-pages
   fi
+  
+  rm .gitignore
+  git reset
+  git add public
+  git clean -fd
+  git commit -am "Update github pages."
 
-  mv public/index.js index.js
-  rm -r public
-  find . -mindepth 1 ! -regex "^./.git(/.*)?" -name "index.js" -delete
-  git checkout main -- ./public/*
-  git add .
-  git commit -m "Update github pages"
-  git push origin gh-pages
+
+  git push origin gh-pages --force
   git checkout main
 
   echo "Succesfully pushed to github-pages!"
