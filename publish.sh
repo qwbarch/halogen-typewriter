@@ -26,6 +26,10 @@ if [ "$current_branch" = "main" ]; then
   git reset
   git add public
   git clean -fd
+
+  mv public/* .
+  rm public
+
   git commit -am "Update github pages."
 
   git push origin gh-pages --force
