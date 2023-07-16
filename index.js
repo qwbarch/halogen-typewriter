@@ -487,6 +487,13 @@
   var eqStringImpl = refEq;
 
   // output/Data.Eq/index.js
+  var eqUnit = {
+    eq: function(v) {
+      return function(v1) {
+        return true;
+      };
+    }
+  };
   var eqString = {
     eq: eqStringImpl
   };
@@ -559,6 +566,16 @@
   };
 
   // output/Data.Ord/index.js
+  var ordUnit = {
+    compare: function(v) {
+      return function(v1) {
+        return EQ.value;
+      };
+    },
+    Eq0: function() {
+      return eqUnit;
+    }
+  };
   var ordString = /* @__PURE__ */ function() {
     return {
       compare: ordStringImpl(LT.value)(EQ.value)(GT.value),
@@ -8152,13 +8169,15 @@
             });
           }
           ;
-          return assign3(cursorHidden2)(true);
+          return discard3(assign3(cursorHidden2)(true))(function() {
+            return raise(Finished.value);
+          });
         }
         ;
         if (action2 instanceof UpdateState) {
           var v = head3(state3.words);
           if (v instanceof Nothing) {
-            return discard3($$void6(modify5(function(v1) {
+            return $$void6(modify5(function(v1) {
               var $48 = {};
               for (var $49 in v1) {
                 if ({}.hasOwnProperty.call(v1, $49)) {
@@ -8170,9 +8189,7 @@
               $48.running = false;
               $48.cursorHidden = true;
               return $48;
-            })))(function() {
-              return raise(Finished.value);
-            });
+            }));
           }
           ;
           if (v instanceof Just) {
@@ -8202,7 +8219,7 @@
                   });
                 }
                 ;
-                throw new Error("Failed pattern match at Halogen.Typewriter (line 169, column 19 - line 179, column 54): " + [v1.constructor.name]);
+                throw new Error("Failed pattern match at Halogen.Typewriter (line 170, column 19 - line 180, column 54): " + [v1.constructor.name]);
               }
               ;
               if (state3.mode instanceof Deleting) {
@@ -8216,16 +8233,16 @@
                 });
               }
               ;
-              throw new Error("Failed pattern match at Halogen.Typewriter (line 166, column 15 - line 187, column 86): " + [state3.mode.constructor.name]);
+              throw new Error("Failed pattern match at Halogen.Typewriter (line 167, column 15 - line 188, column 86): " + [state3.mode.constructor.name]);
             }())(function() {
               return handleAction(UpdateState.value);
             });
           }
           ;
-          throw new Error("Failed pattern match at Halogen.Typewriter (line 161, column 11 - line 188, column 39): " + [v.constructor.name]);
+          throw new Error("Failed pattern match at Halogen.Typewriter (line 163, column 11 - line 189, column 39): " + [v.constructor.name]);
         }
         ;
-        throw new Error("Failed pattern match at Halogen.Typewriter (line 147, column 7 - line 188, column 39): " + [action2.constructor.name]);
+        throw new Error("Failed pattern match at Halogen.Typewriter (line 147, column 7 - line 189, column 39): " + [action2.constructor.name]);
       });
     };
     var $$eval = mkEval({
@@ -9247,41 +9264,15 @@
   };
 
   // output/Main/index.js
+  var slot_2 = /* @__PURE__ */ slot_()({
+    reflectSymbol: function() {
+      return "typewriter";
+    }
+  })(ordUnit);
   var fromFoldable6 = /* @__PURE__ */ fromFoldable2(foldableArray);
   var discard6 = /* @__PURE__ */ discard(discardUnit)(bindStyleM);
   var fromDuration2 = /* @__PURE__ */ fromDuration(durationSeconds);
-  var slot_2 = /* @__PURE__ */ slot_();
-  var slot_1 = /* @__PURE__ */ slot_2({
-    reflectSymbol: function() {
-      return "typing-speed";
-    }
-  })(ordInt);
-  var slot_22 = /* @__PURE__ */ slot_2({
-    reflectSymbol: function() {
-      return "finite-runs";
-    }
-  })(ordInt);
-  var slot_3 = /* @__PURE__ */ slot_2({
-    reflectSymbol: function() {
-      return "jitter";
-    }
-  })(ordInt);
   var map25 = /* @__PURE__ */ map(functorArray);
-  var slot_4 = /* @__PURE__ */ slot_2({
-    reflectSymbol: function() {
-      return "multiple-words";
-    }
-  })(ordInt);
-  var slot_5 = /* @__PURE__ */ slot_2({
-    reflectSymbol: function() {
-      return "single-word";
-    }
-  })(ordInt);
-  var slot_6 = /* @__PURE__ */ slot_2({
-    reflectSymbol: function() {
-      return "subtitle";
-    }
-  })(ordInt);
   var Initialize3 = /* @__PURE__ */ function() {
     function Initialize4() {
     }
@@ -9289,14 +9280,14 @@
     Initialize4.value = new Initialize4();
     return Initialize4;
   }();
-  var css = function($46) {
-    return class_(ClassName($46));
+  var css = function($31) {
+    return class_(ClassName($31));
   };
   var component = function(dictMonadAff) {
     var liftEffect8 = liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
-    var typewriter2 = typewriter(dictMonadAff);
+    var typewriterHtml = slot_2($$Proxy.value)(unit)(typewriter(dictMonadAff));
     var subtitle = {
-      words: cycle(fromFoldable6(["Is a simple typewriter.", "Is made with Halogen.", "Is made in PureScript.", "Is a tiny library."])),
+      words: cycle(fromFoldable6(["a simple typewriter.", "made with Halogen.", "made in PureScript.", "a tiny library."])),
       typeDelay: 60,
       deleteDelay: 20,
       cursor: defaultTypewriter.cursor,
@@ -9317,7 +9308,7 @@
           return [];
         }
         ;
-        throw new Error("Failed pattern match at Main (line 240, column 11 - line 243, column 26): " + [template.typewriter.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 237, column 11 - line 240, column 26): " + [template.typewriter.constructor.name]);
       }()), div3([css("card"), style2(discard6(overflow(overflowAuto))(function() {
         return maxHeight(vh(40));
       }))])([pre([style2(textWhitespace(whitespacePreWrap))])([code([css("language-haskell")])([text5(template.code)])])])]);
@@ -9326,7 +9317,7 @@
       title: "Quickstart",
       description: text5("Minimal example to get started:"),
       typewriter: Nothing.value,
-      code: normalize2('\n          main :: Effect Unit\n          main = runHalogenAff do\n            body <- awaitBody\n            runUI component unit body\n\n          component :: \u2200 q i o m. MonadAff m => Component q i o m\n          component =\n            mkComponent\n              { initialState: const unit\n              , render\n              , eval: mkEval defaultEval\n              }\n            where\n            render _ = div_ [ slot_ (Proxy :: Proxy "typewriter") 0 typewriter input ]\n            input = defaultTypewriter { words = repeat "Hello world!" }\n          ')
+      code: normalize2('\n          main :: Effect Unit\n          main = runHalogenAff do\n            body <- awaitBody\n            runUI component unit body\n\n          component :: \u2200 q i o m. MonadAff m => Component q i o m\n          component =\n            mkComponent\n              { initialState: const unit\n              , render\n              , eval: mkEval defaultEval\n              }\n            where\n            -- See here for more information on how to use slot:\n            -- https://purescript-halogen.github.io/purescript-halogen/guide/05-Parent-Child-Components.html\n            render _ = div_ [ slot_ (Proxy :: Proxy "typewriter") 0 typewriter input ]\n            input = defaultTypewriter { words = repeat "Hello world!" }\n          ')
     });
     var typingSpeedExample = function() {
       var input2 = {
@@ -9342,13 +9333,13 @@
         title: "Typing speed",
         description: text5("You can adjust the typing, deleting, and pause (in between words) delay."),
         code: normalize2('\n            defaultTypewriter\n              { words = repeat "I take my time when I type..."\n              , typeDelay = Milliseconds 400.0\n              , deleteDelay = Milliseconds 100.0\n              , pauseDelay = fromDuration $ Seconds 1.0\n              }\n            '),
-        typewriter: new Just(slot_1($$Proxy.value)(4)(typewriter2)(input2))
+        typewriter: new Just(typewriterHtml(input2))
       });
     }();
     var bold = function() {
-      var $47 = span4([css("has-text-weight-bold")]);
-      return function($48) {
-        return $47(singleton2(text5($48)));
+      var $32 = span4([css("has-text-weight-bold")]);
+      return function($33) {
+        return $32(singleton2(text5($33)));
       };
     }();
     var finiteRunsExample = function() {
@@ -9365,7 +9356,7 @@
         title: "Finite runs",
         description: span_([text5("You probably get it by now. The number of times a word is typed is based on what "), bold("words"), text5(" contains.")]),
         code: normalize2('\n            defaultTypewriter { words = replicate 2 "I will only type this sentence twice." }\n            '),
-        typewriter: new Just(slot_22($$Proxy.value)(3)(typewriter2)(input2))
+        typewriter: new Just(typewriterHtml(input2))
       });
     }();
     var jitterExample = function() {
@@ -9382,7 +9373,7 @@
         title: "Jitter",
         description: span_([text5("A jitter range of "), bold("(0.5, 4.0)"), text5(" means the typewriter waits for "), code_([text5("typeDelay * randomRange(0.5, 4.0)")]), text5(" in between letters.")]),
         code: normalize2('\n            defaultTypewriter\n              { words = repeat "The Cow King is a Hell Bovine monarch that is associated with The Secret Cow Level."\n              , jitter = randomRange 0.5 4.0\n              }\n            '),
-        typewriter: new Just(slot_3($$Proxy.value)(5)(typewriter2)(input2))
+        typewriter: new Just(typewriterHtml(input2))
       });
     }();
     var multipleWordsExample = function() {
@@ -9401,7 +9392,7 @@
         title: "Multiple words",
         description: span_([text5("Use "), bold("fromFoldable"), text5(" to create the list, and "), bold("cycle"), text5(" to repeat it indefinitely.")]),
         code: normalize2('\n            defaultTypewriter\n              { words = cycle $ fromFoldable $ map (_ <> ".") $\n                  [ "John"\n                  , "Olivia"\n                  , "Liam"\n                  , "Emma"\n                  , "Noah"\n                  , "Charlotte"\n                  , "Oliver"\n                  , "Amelia"\n                  ]\n              }\n            '),
-        typewriter: new Just(span_([text5("My name is "), slot_4($$Proxy.value)(2)(typewriter2)(input2)]))
+        typewriter: new Just(span_([text5("My name is "), typewriterHtml(input2)]))
       });
     }();
     var singleWordExample = function() {
@@ -9418,11 +9409,11 @@
         title: "Single word",
         description: span_([bold("words"), span_([text5(" is defined as a lazy list. Once the list is finished, it'll stop typing.")]), p_([text5("Simply provide an infinite list with "), bold("repeat"), text5(" and it'll never stop!")])]),
         code: normalize2('\n            defaultTypewriter { words = repeat "Hello world!" }\n            '),
-        typewriter: new Just(slot_5($$Proxy.value)(1)(typewriter2)(input2))
+        typewriter: new Just(typewriterHtml(input2))
       });
     }();
     var render2 = function(v) {
-      return div3([css("is-flex is-justify-content-center is-align-items-center")])([section([css("section")])([div3([css("card")])([section([css("section")])([div3([css("card-content")])([h1([css("title")])([text5("Halogen Typewriter")]), h2([css("subtitle")])([slot_6($$Proxy.value)(0)(typewriter2)(subtitle)]), quickstartExample, singleWordExample, multipleWordsExample, finiteRunsExample, typingSpeedExample, jitterExample])])])])]);
+      return div3([css("is-flex is-justify-content-center is-align-items-center")])([section([css("section")])([div3([css("card")])([section([css("section")])([div3([css("card-content")])([h1([css("title")])([text5("Halogen Typewriter")]), h2([css("subtitle")])([text5("Is "), typewriterHtml(subtitle)]), quickstartExample, singleWordExample, multipleWordsExample, finiteRunsExample, typingSpeedExample, jitterExample])])])])]);
     };
     return mkComponent({
       initialState: $$const(unit),
