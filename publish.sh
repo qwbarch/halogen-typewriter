@@ -13,12 +13,12 @@ if [ "$current_branch" = "main" ]; then
     find . -mindepth 1 ! -regex '^./.git\(/.*\)?' -delete
     git checkout main -- .
     ./build.sh
-    git add .
   else
     ./build.sh
     git checkout --orphan gh-pages
   fi
   
+  git add .
   rm .gitignore
   git reset
   git add public
