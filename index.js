@@ -7878,19 +7878,19 @@
   };
   var modifying = function(dictMonadState) {
     var $$void9 = $$void(dictMonadState.Monad0().Bind1().Apply0().Functor0());
-    var modify5 = modify4(dictMonadState);
+    var modify6 = modify4(dictMonadState);
     return function(p2) {
       return function(f) {
-        return $$void9(modify5(over3(p2)(f)));
+        return $$void9(modify6(over3(p2)(f)));
       };
     };
   };
   var assign2 = function(dictMonadState) {
     var $$void9 = $$void(dictMonadState.Monad0().Bind1().Apply0().Functor0());
-    var modify5 = modify4(dictMonadState);
+    var modify6 = modify4(dictMonadState);
     return function(p2) {
       return function(b2) {
-        return $$void9(modify5(set(p2)(b2)));
+        return $$void9(modify6(set(p2)(b2)));
       };
     };
   };
@@ -7988,13 +7988,6 @@
       }
     })()()($$Proxy.value);
   }();
-  var running = /* @__PURE__ */ function() {
-    return prop3({
-      reflectSymbol: function() {
-        return "running";
-      }
-    })()()($$Proxy.value);
-  }();
   var pauseDelay = /* @__PURE__ */ function() {
     return prop3({
       reflectSymbol: function() {
@@ -8054,7 +8047,7 @@
   var identity8 = /* @__PURE__ */ identity(categoryFn);
   var cursorDelay2 = /* @__PURE__ */ cursorDelay(strongForget);
   var assign3 = /* @__PURE__ */ assign2(monadStateHalogenM);
-  var running2 = /* @__PURE__ */ running(strongFn);
+  var modify5 = /* @__PURE__ */ modify4(monadStateHalogenM);
   var words2 = /* @__PURE__ */ words(strongFn);
   var mempty1 = /* @__PURE__ */ mempty(monoidList);
   var mode2 = /* @__PURE__ */ mode(strongFn);
@@ -8129,17 +8122,17 @@
     var handleAction = function(action2) {
       return bind6(get3)(function(state3) {
         var sleep = function(modifyDelay) {
-          var $52 = flip(view)(state3);
-          return function($53) {
-            return liftAff2(delay(Milliseconds(modifyDelay(unwrap8($52($53))))));
+          var $56 = flip(view)(state3);
+          return function($57) {
+            return liftAff2(delay(Milliseconds(modifyDelay(unwrap8($56($57))))));
           };
         };
         if (action2 instanceof Initialize2) {
           return bind6(liftEffect12(create3))(function(v2) {
             var forkDispatch = function() {
-              var $54 = notify(v2.listener);
-              return function($55) {
-                return $$void6(liftAff2(forkAff(liftEffect4($54($55)))));
+              var $58 = notify(v2.listener);
+              return function($59) {
+                return $$void6(liftAff2(forkAff(liftEffect4($58($59)))));
               };
             }();
             return discard3($$void6(subscribe2(v2.emitter)))(function() {
@@ -8165,10 +8158,20 @@
         if (action2 instanceof UpdateState) {
           var v = head3(state3.words);
           if (v instanceof Nothing) {
-            return discard3(assign3(running2)(false))(function() {
-              return discard3(assign3(cursorHidden2)(true))(function() {
-                return raise(Finished.value);
-              });
+            return discard3($$void6(modify5(function(v1) {
+              var $48 = {};
+              for (var $49 in v1) {
+                if ({}.hasOwnProperty.call(v1, $49)) {
+                  $48[$49] = v1[$49];
+                }
+                ;
+              }
+              ;
+              $48.running = false;
+              $48.cursorHidden = true;
+              return $48;
+            })))(function() {
+              return raise(Finished.value);
             });
           }
           ;
@@ -8178,9 +8181,9 @@
                 var v1 = charAt2(length3(state3.outputText))(v.value0);
                 if (v1 instanceof Nothing) {
                   return discard3(modifying2(words2)(function() {
-                    var $56 = fromMaybe(mempty1);
-                    return function($57) {
-                      return $56(tail2($57));
+                    var $60 = fromMaybe(mempty1);
+                    return function($61) {
+                      return $60(tail2($61));
                     };
                   }()))(function() {
                     return discard3(assign3(mode2)(Deleting.value))(function() {
@@ -8199,12 +8202,12 @@
                   });
                 }
                 ;
-                throw new Error("Failed pattern match at Halogen.Typewriter (line 170, column 19 - line 180, column 54): " + [v1.constructor.name]);
+                throw new Error("Failed pattern match at Halogen.Typewriter (line 169, column 19 - line 179, column 54): " + [v1.constructor.name]);
               }
               ;
               if (state3.mode instanceof Deleting) {
-                var $50 = $$null2(state3.outputText);
-                if ($50) {
+                var $54 = $$null2(state3.outputText);
+                if ($54) {
                   return assign3(mode2)(Typing.value);
                 }
                 ;
@@ -8213,16 +8216,16 @@
                 });
               }
               ;
-              throw new Error("Failed pattern match at Halogen.Typewriter (line 167, column 15 - line 188, column 86): " + [state3.mode.constructor.name]);
+              throw new Error("Failed pattern match at Halogen.Typewriter (line 166, column 15 - line 187, column 86): " + [state3.mode.constructor.name]);
             }())(function() {
               return handleAction(UpdateState.value);
             });
           }
           ;
-          throw new Error("Failed pattern match at Halogen.Typewriter (line 161, column 11 - line 189, column 39): " + [v.constructor.name]);
+          throw new Error("Failed pattern match at Halogen.Typewriter (line 161, column 11 - line 188, column 39): " + [v.constructor.name]);
         }
         ;
-        throw new Error("Failed pattern match at Halogen.Typewriter (line 147, column 7 - line 189, column 39): " + [action2.constructor.name]);
+        throw new Error("Failed pattern match at Halogen.Typewriter (line 147, column 7 - line 188, column 39): " + [action2.constructor.name]);
       });
     };
     var $$eval = mkEval({
