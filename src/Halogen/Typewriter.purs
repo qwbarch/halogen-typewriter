@@ -4,7 +4,7 @@ import Prelude hiding (div)
 
 import CSS (opacity)
 import Control.Monad.State (get, modify)
-import Data.Foldable (foldMap)
+import Data.Foldable (fold, foldMap)
 import Data.Lens (view, (%=), (.=), (<>=))
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -21,6 +21,7 @@ import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval, rais
 import Halogen.HTML (span, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
+import Halogen.HTML.Properties.ARIA as Aria
 import Halogen.Subscription (create, notify)
 import Halogen.Typewriter.Lens (cursorDelay, cursorHidden, deleteDelay, mode, outputText, pauseDelay, typeDelay, words)
 
@@ -129,12 +130,13 @@ typewriter = mkComponent { initialState, render, eval }
   -- These are for the user's convenience, if they want to change styles for the respective classes.
   render state =
     span
-      [ class_ (ClassName "typewriter") ]
+      [ class_ (ClassName "typewriter"), Aria.label (fold $ head state.words) ]
       [ span
-          [ class_ (ClassName "typewriter-text") ]
+          [ class_ (ClassName "typewriter-text"), Aria.hidden "true" ]
           [ text state.outputText ]
       , span
           [ class_ (ClassName "typewriter-cursor")
+          , Aria.hidden "true"
           , style $ when (state.cursorHidden) $ opacity 0.0
           ]
           [ text $ foldMap singleton state.cursor ]
