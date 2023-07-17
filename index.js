@@ -7852,6 +7852,10 @@
     };
   }();
 
+  // output/Halogen.HTML.Properties.ARIA/index.js
+  var label5 = /* @__PURE__ */ attr2("aria-label");
+  var hidden2 = /* @__PURE__ */ attr2("aria-hidden");
+
   // output/CSS.Display/index.js
   var fromString7 = /* @__PURE__ */ fromString(isStringKey);
   var opacity = /* @__PURE__ */ key(valNumber)(/* @__PURE__ */ fromString7("opacity"));
@@ -7931,10 +7935,6 @@
       };
     };
   };
-
-  // output/Halogen.HTML.Properties.ARIA/index.js
-  var label5 = /* @__PURE__ */ attr2("aria-label");
-  var hidden2 = /* @__PURE__ */ attr2("aria-hidden");
 
   // output/Data.Lens.Lens/index.js
   var lens$prime = function(to) {
@@ -8062,7 +8062,6 @@
   // output/Halogen.Typewriter/index.js
   var fold3 = /* @__PURE__ */ fold(foldableMaybe)(monoidString);
   var when2 = /* @__PURE__ */ when(applicativeStyleM);
-  var foldMap3 = /* @__PURE__ */ foldMap(foldableMaybe)(monoidString);
   var mempty2 = /* @__PURE__ */ mempty(monoidString);
   var bind6 = /* @__PURE__ */ bind(bindHalogenM);
   var get3 = /* @__PURE__ */ get(monadStateHalogenM);
@@ -8131,7 +8130,7 @@
     var liftAff2 = liftAff(monadAffHalogenM(dictMonadAff));
     var liftEffect12 = liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
     var render2 = function(state3) {
-      return span4([class_("typewriter"), label5(fold3(head3(state3.words)))])([span4([class_("typewriter-text"), hidden2("true")])([text5(state3.outputText)]), span4([class_("typewriter-cursor"), hidden2("true"), style2(when2(state3.cursorHidden)(opacity(0)))])([text5(foldMap3(singleton4)(state3.cursor))])]);
+      return span4([class_("typewriter"), label5(fold3(head3(state3.words)))])([span4([class_("typewriter-text"), hidden2("true")])([text5(state3.outputText)]), span4([class_("typewriter-cursor"), hidden2("true"), style2(when2(state3.cursorHidden)(opacity(0)))])([state3.cursor])]);
     };
     var initialState = function(input2) {
       return {
@@ -8151,17 +8150,17 @@
     var handleAction = function(action2) {
       return bind6(get3)(function(state3) {
         var sleep = function(modifyDelay) {
-          var $58 = flip(view)(state3);
-          return function($59) {
-            return liftAff2(delay(Milliseconds(modifyDelay(unwrap8($58($59))))));
+          var $56 = flip(view)(state3);
+          return function($57) {
+            return liftAff2(delay(Milliseconds(modifyDelay(unwrap8($56($57))))));
           };
         };
         if (action2 instanceof Initialize2) {
           return bind6(liftEffect12(create3))(function(v2) {
             var forkDispatch = function() {
-              var $60 = notify(v2.listener);
-              return function($61) {
-                return $$void6(liftAff2(forkAff(liftEffect4($60($61)))));
+              var $58 = notify(v2.listener);
+              return function($59) {
+                return $$void6(liftAff2(forkAff(liftEffect4($58($59)))));
               };
             }();
             return discard3($$void6(subscribe2(v2.emitter)))(function() {
@@ -8190,17 +8189,17 @@
           var v = head3(state3.words);
           if (v instanceof Nothing) {
             return $$void6(modify5(function(v1) {
-              var $50 = {};
-              for (var $51 in v1) {
-                if ({}.hasOwnProperty.call(v1, $51)) {
-                  $50[$51] = v1[$51];
+              var $48 = {};
+              for (var $49 in v1) {
+                if ({}.hasOwnProperty.call(v1, $49)) {
+                  $48[$49] = v1[$49];
                 }
                 ;
               }
               ;
-              $50.running = false;
-              $50.cursorHidden = true;
-              return $50;
+              $48.running = false;
+              $48.cursorHidden = true;
+              return $48;
             }));
           }
           ;
@@ -8210,9 +8209,9 @@
                 var v1 = charAt2(length3(state3.outputText))(v.value0);
                 if (v1 instanceof Nothing) {
                   return discard3(modifying2(words2)(function() {
-                    var $62 = fromMaybe(mempty1);
-                    return function($63) {
-                      return $62(tail2($63));
+                    var $60 = fromMaybe(mempty1);
+                    return function($61) {
+                      return $60(tail2($61));
                     };
                   }()))(function() {
                     return discard3(assign3(mode2)(Deleting.value))(function() {
@@ -8235,8 +8234,8 @@
               }
               ;
               if (state3.mode instanceof Deleting) {
-                var $56 = $$null2(state3.outputText);
-                if ($56) {
+                var $54 = $$null2(state3.outputText);
+                if ($54) {
                   return assign3(mode2)(Typing.value);
                 }
                 ;
@@ -8270,17 +8269,15 @@
       "eval": $$eval
     });
   };
-  var defaultTypewriter = /* @__PURE__ */ function() {
-    return {
-      words: mempty1,
-      typeDelay: 100,
-      deleteDelay: 40,
-      pauseDelay: 900,
-      cursorDelay: 700,
-      cursor: new Just("|"),
-      jitter: randomRange(0.9)(1.1)
-    };
-  }();
+  var defaultTypewriter = {
+    words: mempty1,
+    typeDelay: 100,
+    deleteDelay: 40,
+    pauseDelay: 900,
+    cursorDelay: 700,
+    cursor: /* @__PURE__ */ text5("|"),
+    jitter: /* @__PURE__ */ randomRange(0.9)(1.1)
+  };
 
   // output/Control.Monad.Fork.Class/index.js
   var monadForkAff = {
@@ -9292,8 +9289,8 @@
     Initialize4.value = new Initialize4();
     return Initialize4;
   }();
-  var css = function($31) {
-    return class_(ClassName($31));
+  var css = function($32) {
+    return class_(ClassName($32));
   };
   var component = function(dictMonadAff) {
     var liftEffect8 = liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
@@ -9313,14 +9310,14 @@
     var example = function(template) {
       return div3([css("container pb-5")])([h3([css("has-text-weight-semibold is-size-4")])([text5(template.title)]), p_([template.description]), div3([css("container pb-2 is-flex is-align-items-center")])(function() {
         if (template.typewriter instanceof Just) {
-          return [span4([css("pr-2 has-text-weight-bold is-size-5")])([text5(">")]), template.typewriter.value0];
+          return [span4([css("pr-2 has-text-weight-bold is-size-5"), hidden2("true")])([text5(">")]), template.typewriter.value0];
         }
         ;
         if (template.typewriter instanceof Nothing) {
           return [];
         }
         ;
-        throw new Error("Failed pattern match at Main (line 237, column 11 - line 240, column 26): " + [template.typewriter.constructor.name]);
+        throw new Error("Failed pattern match at Main (line 269, column 11 - line 276, column 26): " + [template.typewriter.constructor.name]);
       }()), div3([css("card"), style2(discard6(overflow(overflowAuto))(function() {
         return maxHeight(vh(40));
       }))])([pre([style2(textWhitespace(whitespacePreWrap))])([code([css("language-haskell")])([text5(template.code)])])])]);
@@ -9348,10 +9345,37 @@
         typewriter: new Just(typewriterHtml(input2))
       });
     }();
+    var emptyCursorExample = function() {
+      var input2 = {
+        words: cycle(fromFoldable6(["Knowledge is power.", "Life is like a box of chocolates. You never know what you're gonna get.", "Life is like riding a bicycle. To keep your balance, you must keep moving.", "May the Force be with you."])),
+        cursor: text5(""),
+        cursorDelay: defaultTypewriter.cursorDelay,
+        deleteDelay: defaultTypewriter.deleteDelay,
+        jitter: defaultTypewriter.jitter,
+        pauseDelay: defaultTypewriter.pauseDelay,
+        typeDelay: defaultTypewriter.typeDelay
+      };
+      return example({
+        title: "Empty cursor",
+        description: text5("Simply provide empty HTML to hide the cursor."),
+        code: normalize2(`
+            defaultTypewriter
+              { words = cycle $ fromFoldable
+                  [ "Knowledge is power."
+                  , "Life is like a box of chocolates. You never know what you're gonna get."
+                  , "Life is like riding a bicycle. To keep your balance, you must keep moving."
+                  , "May the Force be with you."
+                  ]
+              , cursor = text ""
+              }
+            `),
+        typewriter: new Just(typewriterHtml(input2))
+      });
+    }();
     var bold = function() {
-      var $32 = span4([css("has-text-weight-bold")]);
-      return function($33) {
-        return $32(singleton2(text5($33)));
+      var $33 = span4([css("has-text-weight-bold")]);
+      return function($34) {
+        return $33(singleton2(text5($34)));
       };
     }();
     var finiteRunsExample = function() {
@@ -9425,7 +9449,7 @@
       });
     }();
     var render2 = function(v) {
-      return div3([css("is-flex is-justify-content-center is-align-items-center")])([section([css("section")])([div3([css("card")])([section([css("section")])([div3([css("card-content")])([h1([css("title")])([text5("Halogen Typewriter")]), h2([css("subtitle")])([text5("Is "), typewriterHtml(subtitle)]), quickstartExample, singleWordExample, multipleWordsExample, finiteRunsExample, typingSpeedExample, jitterExample])])])])]);
+      return div3([css("is-flex is-justify-content-center is-align-items-center")])([section([css("section")])([div3([css("card")])([section([css("section")])([div3([css("card-content")])([h1([css("title")])([text5("Halogen Typewriter")]), h2([css("subtitle")])([text5("Is "), typewriterHtml(subtitle)]), quickstartExample, singleWordExample, multipleWordsExample, finiteRunsExample, typingSpeedExample, jitterExample, emptyCursorExample])])])])]);
     };
     return mkComponent({
       initialState: $$const(unit),
