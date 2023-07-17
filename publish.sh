@@ -27,7 +27,7 @@ if [ "$current_branch" = "main" ]; then
   rm -r public
 
   git add --all -- :!.spago
-  git commit -am "Update github pages."
+  git commit -am "Update github pages"
 
   git push origin gh-pages --force
   git checkout main
