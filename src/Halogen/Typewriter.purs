@@ -4,7 +4,7 @@ import Prelude hiding (div)
 
 import CSS (opacity)
 import Control.Monad.State (get, modify)
-import Data.Foldable (fold, foldMap)
+import Data.Foldable (fold)
 import Data.Lens (view, (%=), (.=), (<>=))
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -17,7 +17,7 @@ import Effect.Aff (delay, forkAff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
 import Effect.Random (randomRange)
-import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval, raise, subscribe)
+import Halogen (ClassName(..), Component, ComponentHTML, defaultEval, mkComponent, mkEval, raise, subscribe)
 import Halogen.HTML (span, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
@@ -26,7 +26,7 @@ import Halogen.Subscription (create, notify)
 import Halogen.Typewriter.Lens (cursorDelay, cursorHidden, deleteDelay, mode, outputText, pauseDelay, typeDelay, words)
 
 -- | Configuration to initialize 'typewriter'.
-type Input =
+type Input m =
   { -- | Words for 'typewriter' to type.
     words :: List String
   -- | Delay after typing a letter.
@@ -37,15 +37,15 @@ type Input =
   , pauseDelay :: Milliseconds
   -- | Delay in between showing/hiding the cursor.
   , cursorDelay :: Milliseconds
-  -- | The cursor to display. Use 'Nothing' to hide it.
-  , cursor :: Maybe Char
+  -- | The cursor to display.
+  , cursor :: ComponentHTML Action () m
   -- | Used to make the typing/deleting speed a bit more randomized.
   -- | The result of this function is multiplied by the typing delay.
   , jitter :: Effect Number
   }
 
 -- | Internal state for 'typewriter'.
-type State =
+type State m =
   { -- | Words for 'typewriter' to type.
     words :: List String
   -- | The currently displayed text.
@@ -60,8 +60,8 @@ type State =
   , cursorDelay :: Milliseconds
   -- | Whether the typewriter should be typing or deleting.
   , mode :: Mode
-  -- | The cursor to display. Use 'Nothing' to hide it.
-  , cursor :: Maybe Char
+  -- | The cursor to display.
+  , cursor :: ComponentHTML Action () m
   -- | Current cursor visibility. Used for the blinking effect.
   , cursorHidden :: Boolean
   -- | Used to make the typing/deleting speed a bit more randomized.
@@ -89,14 +89,14 @@ data Action
   | UpdateCursor
 
 -- | Default typewriter 'Input' parameters.
-defaultTypewriter :: Input
+defaultTypewriter :: ∀ m. Input m
 defaultTypewriter =
   { words: mempty
   , typeDelay: Milliseconds 100.0
   , deleteDelay: Milliseconds 40.0
   , pauseDelay: Milliseconds 900.0
   , cursorDelay: Milliseconds 700.0
-  , cursor: Just '|'
+  , cursor: text "|"
   , jitter: randomRange 0.9 1.1
   }
 
@@ -108,7 +108,7 @@ data Output =
 
 -- | Typewriter component. For more info on how to use this as a child component, see here:
 -- | https://purescript-halogen.github.io/purescript-halogen/guide/05-Parent-Child-Components.html
-typewriter :: ∀ q m. MonadAff m => Component q Input Output m
+typewriter :: ∀ q m. MonadAff m => Component q (Input m) Output m
 typewriter = mkComponent { initialState, render, eval }
   where
   initialState input =
@@ -139,7 +139,7 @@ typewriter = mkComponent { initialState, render, eval }
           , Aria.hidden "true"
           , style $ when (state.cursorHidden) $ opacity 0.0
           ]
-          [ text $ foldMap singleton state.cursor ]
+          [ state.cursor ]
       ]
 
   handleAction action = get >>= \state ->

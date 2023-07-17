@@ -17,6 +17,7 @@ import Halogen.Aff (awaitBody, runHalogenAff)
 import Halogen.HTML (IProp, code, code_, div, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
+import Halogen.HTML.Properties.ARIA as Aria
 import Halogen.Typewriter (defaultTypewriter, typewriter)
 import Halogen.VDom.Driver (runUI)
 import Substitute (normalize)
@@ -227,6 +228,37 @@ component =
         , typewriter: Just $ typewriterHtml input
         }
 
+  emptyCursorExample =
+    let
+      input =
+        defaultTypewriter
+          { words = cycle $ fromFoldable
+              [ "Knowledge is power."
+              , "Life is like a box of chocolates. You never know what you're gonna get."
+              , "Life is like riding a bicycle. To keep your balance, you must keep moving."
+              , "May the Force be with you."
+              ]
+          , cursor = text ""
+          }
+    in
+      example
+        { title: "Empty cursor"
+        , description: text "Simply provide empty HTML to hide the cursor."
+        , code: normalize
+            """
+            defaultTypewriter
+              { words = cycle $ fromFoldable
+                  [ "Knowledge is power."
+                  , "Life is like a box of chocolates. You never know what you're gonna get."
+                  , "Life is like riding a bicycle. To keep your balance, you must keep moving."
+                  , "May the Force be with you."
+                  ]
+              , cursor = text ""
+              }
+            """
+        , typewriter: Just $ typewriterHtml input
+        }
+
   example template =
     div
       [ css "container pb-5" ]
@@ -236,7 +268,11 @@ component =
           [ css "container pb-2 is-flex is-align-items-center" ]
           case template.typewriter of
             Just typewriter ->
-              [ span [ css "pr-2 has-text-weight-bold is-size-5" ] [ text ">" ], typewriter ]
+              [ span
+                  [ css "pr-2 has-text-weight-bold is-size-5", Aria.hidden "true" ]
+                  [ text ">" ]
+              , typewriter
+              ]
             Nothing -> []
 
       , div
@@ -271,6 +307,7 @@ component =
                       , finiteRunsExample
                       , typingSpeedExample
                       , jitterExample
+                      , emptyCursorExample
                       ]
                   ]
               ]
