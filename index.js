@@ -8219,7 +8219,7 @@
                   });
                 }
                 ;
-                throw new Error("Failed pattern match at Halogen.Typewriter (line 170, column 19 - line 180, column 54): " + [v1.constructor.name]);
+                throw new Error("Failed pattern match at Halogen.Typewriter (line 169, column 19 - line 179, column 54): " + [v1.constructor.name]);
               }
               ;
               if (state3.mode instanceof Deleting) {
@@ -8233,16 +8233,16 @@
                 });
               }
               ;
-              throw new Error("Failed pattern match at Halogen.Typewriter (line 167, column 15 - line 188, column 86): " + [state3.mode.constructor.name]);
+              throw new Error("Failed pattern match at Halogen.Typewriter (line 166, column 15 - line 187, column 86): " + [state3.mode.constructor.name]);
             }())(function() {
               return handleAction(UpdateState.value);
             });
           }
           ;
-          throw new Error("Failed pattern match at Halogen.Typewriter (line 163, column 11 - line 189, column 39): " + [v.constructor.name]);
+          throw new Error("Failed pattern match at Halogen.Typewriter (line 163, column 11 - line 188, column 39): " + [v.constructor.name]);
         }
         ;
-        throw new Error("Failed pattern match at Halogen.Typewriter (line 147, column 7 - line 189, column 39): " + [action2.constructor.name]);
+        throw new Error("Failed pattern match at Halogen.Typewriter (line 147, column 7 - line 188, column 39): " + [action2.constructor.name]);
       });
     };
     var $$eval = mkEval({
