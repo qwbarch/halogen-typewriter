@@ -8060,12 +8060,14 @@
   }();
 
   // output/Halogen.Typewriter/index.js
-  var fold3 = /* @__PURE__ */ fold(foldableMaybe)(monoidString);
+  var bindFlipped5 = /* @__PURE__ */ bindFlipped(bindHalogenM);
+  var unwrap8 = /* @__PURE__ */ unwrap();
+  var get3 = /* @__PURE__ */ get(monadStateHalogenM);
+  var fold3 = /* @__PURE__ */ fold(foldableMaybe);
+  var fold12 = /* @__PURE__ */ fold3(monoidString);
   var when2 = /* @__PURE__ */ when(applicativeStyleM);
   var mempty2 = /* @__PURE__ */ mempty(monoidString);
   var bind6 = /* @__PURE__ */ bind(bindHalogenM);
-  var get3 = /* @__PURE__ */ get(monadStateHalogenM);
-  var unwrap8 = /* @__PURE__ */ unwrap();
   var $$void6 = /* @__PURE__ */ $$void(functorHalogenM);
   var liftEffect4 = /* @__PURE__ */ liftEffect(monadEffectAff);
   var discard3 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
@@ -8077,7 +8079,7 @@
   var assign3 = /* @__PURE__ */ assign2(monadStateHalogenM);
   var modify5 = /* @__PURE__ */ modify4(monadStateHalogenM);
   var words2 = /* @__PURE__ */ words(strongFn);
-  var mempty1 = /* @__PURE__ */ mempty(monoidList);
+  var fold22 = /* @__PURE__ */ fold3(monoidList);
   var mode2 = /* @__PURE__ */ mode(strongFn);
   var pauseDelay2 = /* @__PURE__ */ pauseDelay(strongForget);
   var typeDelay2 = /* @__PURE__ */ typeDelay(strongForget);
@@ -8129,8 +8131,18 @@
   var typewriter = function(dictMonadAff) {
     var liftAff2 = liftAff(monadAffHalogenM(dictMonadAff));
     var liftEffect12 = liftEffect(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
+    var sleep = function(modifyDelay) {
+      return function(field) {
+        return bindFlipped5(function() {
+          var $59 = view(field);
+          return function($60) {
+            return liftAff2(delay(Milliseconds(modifyDelay(unwrap8($59($60))))));
+          };
+        }())(get3);
+      };
+    };
     var render2 = function(state3) {
-      return span4([class_("typewriter"), label5(fold3(head3(state3.words)))])([span4([class_("typewriter-text"), hidden2("true")])([text5(state3.outputText)]), span4([class_("typewriter-cursor"), hidden2("true"), style2(when2(state3.cursorHidden)(opacity(0)))])([state3.cursor])]);
+      return span4([class_("typewriter"), label5(fold12(head3(state3.words)))])([span4([class_("typewriter-text"), hidden2("true")])([text5(state3.outputText)]), span4([class_("typewriter-cursor"), hidden2("true"), style2(when2(state3.cursorHidden)(opacity(0)))])([state3.cursor])]);
     };
     var initialState = function(input2) {
       return {
@@ -8147,31 +8159,25 @@
         running: true
       };
     };
-    var handleAction = function(action2) {
-      return bind6(get3)(function(state3) {
-        var sleep = function(modifyDelay) {
-          var $56 = flip(view)(state3);
-          return function($57) {
-            return liftAff2(delay(Milliseconds(modifyDelay(unwrap8($56($57))))));
-          };
-        };
-        if (action2 instanceof Initialize2) {
-          return bind6(liftEffect12(create3))(function(v2) {
-            var forkDispatch = function() {
-              var $58 = notify(v2.listener);
-              return function($59) {
-                return $$void6(liftAff2(forkAff(liftEffect4($58($59)))));
-              };
-            }();
-            return discard3($$void6(subscribe2(v2.emitter)))(function() {
-              return discard3(forkDispatch(UpdateCursor.value))(function() {
-                return forkDispatch(UpdateState.value);
-              });
+    var handleAction = function(v) {
+      if (v instanceof Initialize2) {
+        return bind6(liftEffect12(create3))(function(v1) {
+          var forkDispatch = function() {
+            var $61 = notify(v1.listener);
+            return function($62) {
+              return $$void6(liftAff2(forkAff(liftEffect4($61($62)))));
+            };
+          }();
+          return discard3($$void6(subscribe2(v1.emitter)))(function() {
+            return discard3(forkDispatch(UpdateCursor.value))(function() {
+              return forkDispatch(UpdateState.value);
             });
           });
-        }
-        ;
-        if (action2 instanceof UpdateCursor) {
+        });
+      }
+      ;
+      if (v instanceof UpdateCursor) {
+        return bind6(get3)(function(state3) {
           if (state3.running) {
             return discard3(modifying2(cursorHidden2)(not2))(function() {
               return discard3(sleep(identity9)(cursorDelay2))(function() {
@@ -8183,78 +8189,77 @@
           return discard3(assign3(cursorHidden2)(true))(function() {
             return raise(Finished.value);
           });
-        }
-        ;
-        if (action2 instanceof UpdateState) {
-          var v = head3(state3.words);
-          if (v instanceof Nothing) {
-            return $$void6(modify5(function(v1) {
-              var $48 = {};
-              for (var $49 in v1) {
-                if ({}.hasOwnProperty.call(v1, $49)) {
-                  $48[$49] = v1[$49];
+        });
+      }
+      ;
+      if (v instanceof UpdateState) {
+        return bind6(get3)(function(state3) {
+          var v1 = head3(state3.words);
+          if (v1 instanceof Nothing) {
+            return $$void6(modify5(function(v2) {
+              var $51 = {};
+              for (var $52 in v2) {
+                if ({}.hasOwnProperty.call(v2, $52)) {
+                  $51[$52] = v2[$52];
                 }
                 ;
               }
               ;
-              $48.running = false;
-              $48.cursorHidden = true;
-              return $48;
+              $51.running = false;
+              $51.cursorHidden = true;
+              return $51;
             }));
           }
           ;
-          if (v instanceof Just) {
+          if (v1 instanceof Just) {
             return discard3(function() {
               if (state3.mode instanceof Typing) {
-                var v1 = charAt2(length3(state3.outputText))(v.value0);
-                if (v1 instanceof Nothing) {
-                  return discard3(modifying2(words2)(function() {
-                    var $60 = fromMaybe(mempty1);
-                    return function($61) {
-                      return $60(tail2($61));
-                    };
-                  }()))(function() {
+                var v2 = charAt2(length3(state3.outputText))(v1.value0);
+                if (v2 instanceof Nothing) {
+                  return discard3(modifying2(words2)(function($63) {
+                    return fold22(tail2($63));
+                  }))(function() {
                     return discard3(assign3(mode2)(Deleting.value))(function() {
                       return sleep(identity9)(pauseDelay2);
                     });
                   });
                 }
                 ;
-                if (v1 instanceof Just) {
+                if (v2 instanceof Just) {
                   return bind6(liftEffect12(state3.jitter))(function(coefficient) {
-                    return discard3(sleep(function(v2) {
-                      return v2 * coefficient;
+                    return discard3(sleep(function(v3) {
+                      return v3 * coefficient;
                     })(typeDelay2))(function() {
-                      return appendModifying2(outputText2)(singleton4(v1.value0));
+                      return appendModifying2(outputText2)(singleton4(v2.value0));
                     });
                   });
                 }
                 ;
-                throw new Error("Failed pattern match at Halogen.Typewriter (line 171, column 19 - line 181, column 54): " + [v1.constructor.name]);
+                throw new Error("Failed pattern match at Halogen.Typewriter (line 168, column 15 - line 178, column 50): " + [v2.constructor.name]);
               }
               ;
               if (state3.mode instanceof Deleting) {
-                var $54 = $$null2(state3.outputText);
-                if ($54) {
+                var $57 = $$null2(state3.outputText);
+                if ($57) {
                   return assign3(mode2)(Typing.value);
                 }
                 ;
                 return discard3(sleep(identity9)(deleteDelay2))(function() {
-                  return assign3(outputText2)(take3(length3(state3.outputText) - 1 | 0)(state3.outputText));
+                  return modifying2(outputText2)(take3(length3(state3.outputText) - 1 | 0));
                 });
               }
               ;
-              throw new Error("Failed pattern match at Halogen.Typewriter (line 168, column 15 - line 189, column 86): " + [state3.mode.constructor.name]);
+              throw new Error("Failed pattern match at Halogen.Typewriter (line 165, column 11 - line 186, column 65): " + [state3.mode.constructor.name]);
             }())(function() {
               return handleAction(UpdateState.value);
             });
           }
           ;
-          throw new Error("Failed pattern match at Halogen.Typewriter (line 165, column 11 - line 190, column 39): " + [v.constructor.name]);
-        }
-        ;
-        throw new Error("Failed pattern match at Halogen.Typewriter (line 149, column 7 - line 190, column 39): " + [action2.constructor.name]);
-      });
+          throw new Error("Failed pattern match at Halogen.Typewriter (line 162, column 7 - line 187, column 35): " + [v1.constructor.name]);
+        });
+      }
+      ;
+      throw new Error("Failed pattern match at Halogen.Typewriter (line 146, column 18 - line 187, column 35): " + [v.constructor.name]);
     };
     var $$eval = mkEval({
       handleAction,
@@ -8270,7 +8275,7 @@
     });
   };
   var defaultTypewriter = {
-    words: mempty1,
+    words: /* @__PURE__ */ mempty(monoidList),
     typeDelay: 100,
     deleteDelay: 40,
     pauseDelay: 900,
@@ -8363,7 +8368,7 @@
 
   // output/Halogen.Aff.Driver.Eval/index.js
   var traverse_4 = /* @__PURE__ */ traverse_(applicativeEffect)(foldableMaybe);
-  var bindFlipped5 = /* @__PURE__ */ bindFlipped(bindMaybe);
+  var bindFlipped6 = /* @__PURE__ */ bindFlipped(bindMaybe);
   var lookup8 = /* @__PURE__ */ lookup3(ordSubscriptionId);
   var bind12 = /* @__PURE__ */ bind(bindAff);
   var liftEffect5 = /* @__PURE__ */ liftEffect(monadEffectAff);
@@ -8394,7 +8399,7 @@
       return function __do2() {
         var v = read(ref2)();
         var subs = read(v.subscriptions)();
-        return traverse_4(unsubscribe)(bindFlipped5(lookup8(sid))(subs))();
+        return traverse_4(unsubscribe)(bindFlipped6(lookup8(sid))(subs))();
       };
     };
   };
@@ -8650,7 +8655,7 @@
   var for_2 = /* @__PURE__ */ for_(applicativeEffect)(foldableMaybe);
   var traverse_5 = /* @__PURE__ */ traverse_(applicativeAff)(foldableList);
   var fork4 = /* @__PURE__ */ fork(monadForkAff);
-  var bindFlipped6 = /* @__PURE__ */ bindFlipped(bindEffect);
+  var bindFlipped7 = /* @__PURE__ */ bindFlipped(bindEffect);
   var traverse_13 = /* @__PURE__ */ traverse_(applicativeEffect);
   var traverse_23 = /* @__PURE__ */ traverse_13(foldableMaybe);
   var traverse_33 = /* @__PURE__ */ traverse_13(foldableMap);
@@ -8689,9 +8694,9 @@
   };
   var cleanupSubscriptionsAndForks = function(v) {
     return function __do2() {
-      bindFlipped6(traverse_23(traverse_33(unsubscribe)))(read(v.subscriptions))();
+      bindFlipped7(traverse_23(traverse_33(unsubscribe)))(read(v.subscriptions))();
       write(Nothing.value)(v.subscriptions)();
-      bindFlipped6(traverse_33(function() {
+      bindFlipped7(traverse_33(function() {
         var $60 = killFiber(error("finalized"));
         return function($61) {
           return handleAff($60($61));
@@ -8735,7 +8740,7 @@
                     initializers: Nil.value,
                     finalizers: pre2.finalizers
                   })(lchs)();
-                  bindFlipped6(unDriverStateX(function() {
+                  bindFlipped7(unDriverStateX(function() {
                     var $62 = render2(lchs);
                     return function($63) {
                       return $62(function(v) {
@@ -8743,7 +8748,7 @@
                       }($63));
                     };
                   }()))(read($$var2))();
-                  bindFlipped6(squashChildInitializers(lchs)(pre2.initializers))(read($$var2))();
+                  bindFlipped7(squashChildInitializers(lchs)(pre2.initializers))(read($$var2))();
                   return $$var2;
                 };
               });
@@ -8941,7 +8946,7 @@
           return bind13(liftEffect6($$new(false)))(function(disposed) {
             return handleLifecycle(lchs)(function __do2() {
               var sio = create3();
-              var dsx = bindFlipped6(read)(runComponent(lchs)(function() {
+              var dsx = bindFlipped7(read)(runComponent(lchs)(function() {
                 var $77 = notify(sio.listener);
                 return function($78) {
                   return liftEffect6($77($78));
@@ -9044,7 +9049,7 @@
   var bind14 = /* @__PURE__ */ bind(bindAff);
   var liftEffect7 = /* @__PURE__ */ liftEffect(monadEffectAff);
   var map24 = /* @__PURE__ */ map(functorEffect);
-  var bindFlipped7 = /* @__PURE__ */ bindFlipped(bindEffect);
+  var bindFlipped8 = /* @__PURE__ */ bindFlipped(bindEffect);
   var substInParent = function(v) {
     return function(v1) {
       return function(v2) {
@@ -9191,7 +9196,7 @@
   var runUI2 = function(component2) {
     return function(i2) {
       return function(element4) {
-        return bind14(liftEffect7(map24(toDocument)(bindFlipped7(document)(windowImpl))))(function(document2) {
+        return bind14(liftEffect7(map24(toDocument)(bindFlipped8(document)(windowImpl))))(function(document2) {
           return runUI(renderSpec(document2)(element4))(component2)(i2);
         });
       };
