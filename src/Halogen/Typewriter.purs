@@ -7,7 +7,7 @@ import Control.Monad.State (get, modify)
 import Data.Foldable (fold)
 import Data.Lens (view, (%=), (.=), (<>=))
 import Data.List.Lazy (List, head, tail)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
 import Data.String (null, take)
 import Data.String.CodeUnits (charAt, length, singleton)
@@ -142,49 +142,46 @@ typewriter = mkComponent { initialState, render, eval }
           [ state.cursor ]
       ]
 
-  handleAction action = get >>= \state ->
-    let
-      sleep modifyDelay = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< flip view state
-    in
-      case action of
-        Initialize -> do
-          { emitter, listener } <- liftEffect create
-          let forkDispatch = void <<< liftAff <<< forkAff <<< liftEffect <<< notify listener
-          void $ subscribe emitter
-          forkDispatch UpdateCursor
-          forkDispatch UpdateState
-        UpdateCursor ->
-          if state.running then do
-            cursorHidden %= not
-            sleep identity cursorDelay
-            handleAction UpdateCursor
-          else do
-            cursorHidden .= true
-            raise Finished
-        UpdateState ->
-          case head state.words of
-            Nothing -> void $ modify $ _ { running = false, cursorHidden = true }
-            Just word -> do
-              case state.mode of
-                Typing ->
-                  -- Gets the next letter of the word.
-                  case charAt (length state.outputText) word of
-                    Nothing -> do
-                      -- Delete the current word from state.words.
-                      words %= fromMaybe mempty <<< tail
-                      mode .= Deleting
-                      sleep identity pauseDelay
-                    Just letter -> do
-                      coefficient <- liftEffect $ state.jitter
-                      sleep (_ * coefficient) typeDelay
-                      -- Add the next letter to outputText.
-                      outputText <>= singleton letter
-                Deleting ->
-                  -- When outputText is empty, start typing.
-                  if null state.outputText then mode .= Typing
-                  else do
-                    sleep identity deleteDelay
-                    -- Remove the last letter of outputText.
-                    -- It's unfortunate the 'init' function doesn't exist for strings!
-                    outputText .= take (length state.outputText - 1) state.outputText
-              handleAction UpdateState
+  sleep modifyDelay field = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< view field =<< get
+  handleAction = case _ of
+    Initialize -> do
+      { emitter, listener } <- liftEffect create
+      let forkDispatch = void <<< liftAff <<< forkAff <<< liftEffect <<< notify listener
+      void $ subscribe emitter
+      forkDispatch UpdateCursor
+      forkDispatch UpdateState
+    UpdateCursor -> get >>= \state ->
+      if state.running then do
+        cursorHidden %= not
+        sleep identity cursorDelay
+        handleAction UpdateCursor
+      else do
+        cursorHidden .= true
+        raise Finished
+    UpdateState -> get >>= \state ->
+      case head state.words of
+        Nothing -> void $ modify $ _ { running = false, cursorHidden = true }
+        Just word -> do
+          case state.mode of
+            Typing ->
+              -- Gets the next letter of the word.
+              case charAt (length state.outputText) word of
+                Nothing -> do
+                  -- Delete the current word from state.words.
+                  words %= fold <<< tail
+                  mode .= Deleting
+                  sleep identity pauseDelay
+                Just letter -> do
+                  coefficient <- liftEffect $ state.jitter
+                  sleep (_ * coefficient) typeDelay
+                  -- Add the next letter to outputText.
+                  outputText <>= singleton letter
+            Deleting ->
+              -- When outputText is empty, start typing.
+              if null state.outputText then mode .= Typing
+              else do
+                sleep identity deleteDelay
+                -- Remove the last letter of outputText.
+                -- It's unfortunate the 'init' function doesn't exist for strings!
+                outputText %= take (length state.outputText - 1)
+          handleAction UpdateState
