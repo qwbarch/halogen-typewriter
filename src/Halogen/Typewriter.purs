@@ -5,10 +5,12 @@ import Prelude hiding (div)
 import CSS (opacity)
 import Control.Monad.State (get, modify)
 import Data.Foldable (fold)
+import Data.Generic.Rep (class Generic)
 import Data.Lens (view, (%=), (.=), (<>=))
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
+import Data.Show.Generic (genericShow)
 import Data.String (null, take)
 import Data.String.CodeUnits (charAt, length, singleton)
 import Data.Time.Duration (Milliseconds(..))
@@ -16,6 +18,7 @@ import Effect (Effect)
 import Effect.Aff (delay, forkAff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
+import Effect.Class.Console (log)
 import Effect.Random (randomRange)
 import Halogen (ClassName(..), Component, ComponentHTML, defaultEval, mkComponent, mkEval, raise, subscribe)
 import Halogen.HTML (span, text)
@@ -77,6 +80,9 @@ data Mode
   = Typing
   -- | The typewriter is currently deleting letters.
   | Deleting
+
+derive instance eqMode :: Eq Mode
+derive instance genericMode :: Generic Mode _
 
 -- | Internal actions for 'typewriter'.
 data Action
@@ -152,7 +158,8 @@ typewriter = mkComponent { initialState, render, eval }
       forkDispatch UpdateState
     UpdateCursor -> get >>= \state ->
       when state.running $ do
-        cursorHidden %= not
+        when (state.mode == Typing) $
+          cursorHidden %= not
         sleep identity cursorDelay
         handleAction UpdateCursor
     UpdateState -> get >>= \state ->
@@ -168,8 +175,8 @@ typewriter = mkComponent { initialState, render, eval }
                 Nothing -> do
                   -- Delete the current word from state.words.
                   words %= fold <<< tail
-                  mode .= Deleting
                   sleep identity pauseDelay
+                  void $ modify $ _ { mode = Deleting, cursorHidden = false }
                 Just letter -> do
                   coefficient <- liftEffect state.jitter
                   sleep (_ * coefficient) typeDelay
