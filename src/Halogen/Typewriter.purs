@@ -151,16 +151,15 @@ typewriter = mkComponent { initialState, render, eval }
       forkDispatch UpdateCursor
       forkDispatch UpdateState
     UpdateCursor -> get >>= \state ->
-      if state.running then do
+      when state.running $ do
         cursorHidden %= not
         sleep identity cursorDelay
         handleAction UpdateCursor
-      else do
-        cursorHidden .= true
-        raise Finished
     UpdateState -> get >>= \state ->
       case head state.words of
-        Nothing -> void $ modify $ _ { running = false, cursorHidden = true }
+        Nothing -> do
+          void $ modify $ _ { running = false, cursorHidden = true }
+          raise Finished
         Just word -> do
           case state.mode of
             Typing ->
@@ -172,7 +171,7 @@ typewriter = mkComponent { initialState, render, eval }
                   mode .= Deleting
                   sleep identity pauseDelay
                 Just letter -> do
-                  coefficient <- liftEffect $ state.jitter
+                  coefficient <- liftEffect state.jitter
                   sleep (_ * coefficient) typeDelay
                   -- Add the next letter to outputText.
                   outputText <>= singleton letter
