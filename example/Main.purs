@@ -5,7 +5,7 @@ import Prelude hiding (div)
 import CSS (maxHeight, textWhitespace, vh, whitespacePreWrap)
 import CSS.Overflow (overflow, overflowAuto)
 import Data.Array (singleton)
-import Data.List.Lazy (cycle, fromFoldable, repeat, replicate)
+import Data.List.Lazy (cycle, fold, fromFoldable, intercalate, repeat, replicate)
 import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..), Seconds(..), fromDuration)
 import Effect (Effect)
@@ -14,11 +14,11 @@ import Effect.Class (liftEffect)
 import Effect.Random (randomRange)
 import Halogen (ClassName(..), Component, defaultEval, mkComponent, mkEval)
 import Halogen.Aff (awaitBody, runHalogenAff)
-import Halogen.HTML (IProp, code, code_, div, h1, h2, h3, p_, pre, section, slot_, span, span_, text)
+import Halogen.HTML (IProp, code, code_, div, div_, h1, h2, h3, p, p_, pre, section, slot_, span, span_, text)
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Properties (class_)
 import Halogen.HTML.Properties.ARIA as Aria
-import Halogen.Typewriter (defaultTypewriter, typewriter)
+import Halogen.Typewriter (Mode(..), defaultTypewriter, typewriter)
 import Halogen.VDom.Driver (runUI)
 import Substitute (normalize)
 import Type.Prelude (Proxy(..))
@@ -259,6 +259,31 @@ component =
         , typewriter: Just $ typewriterHtml input
         }
 
+  deletingExample =
+    let
+      input =
+        defaultTypewriter
+          { words = repeat "Wisdom is the offspring of suffering and time."
+          , initialMode = Deleting
+          }
+    in
+      example
+        { title: "Backspace initially"
+        , description:
+            text $ intercalate " "
+              [ "Instead of typing the initial word, you can have the typewriter delete it instead."
+              , "If you don't notice a difference, refresh your page and look at the example again."
+              ]
+        , code: normalize
+            """
+            defaultTypewriter
+              { words = repeat "Wisdom is the offspring of suffering and time."
+              , initialMode = Deleting
+              }
+            """
+        , typewriter: Just $ typewriterHtml input
+        }
+
   example template =
     div
       [ css "container pb-5" ]
@@ -308,6 +333,7 @@ component =
                       , typingSpeedExample
                       , jitterExample
                       , emptyCursorExample
+                      , deletingExample
                       ]
                   ]
               ]

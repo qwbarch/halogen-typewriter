@@ -10,7 +10,6 @@ import Data.Lens (view, (%=), (.=), (<>=))
 import Data.List.Lazy (List, head, tail)
 import Data.Maybe (Maybe(..))
 import Data.Newtype (unwrap)
-import Data.Show.Generic (genericShow)
 import Data.String (null, take)
 import Data.String.CodeUnits (charAt, length, singleton)
 import Data.Time.Duration (Milliseconds(..))
@@ -18,7 +17,6 @@ import Effect (Effect)
 import Effect.Aff (delay, forkAff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
-import Effect.Class.Console (log)
 import Effect.Random (randomRange)
 import Halogen (ClassName(..), Component, ComponentHTML, defaultEval, mkComponent, mkEval, raise, subscribe)
 import Halogen.HTML (span, text)
@@ -45,6 +43,10 @@ type Input m =
   -- | Used to make the typing/deleting speed a bit more randomized.
   -- | The result of this function is multiplied by the typing delay.
   , jitter :: Effect Number
+  -- | The initial mode to use.
+  -- | If set to 'Typing', the typewriter state will start with empty text.
+  -- | If set to 'Deleting', the typewriter will display the first word, and then start backspacing.
+  , initialMode :: Mode
   }
 
 -- | Internal state for 'typewriter'.
@@ -72,6 +74,10 @@ type State m =
   , jitter :: Effect Number
   -- | Whether the typewriter is running or not.
   , running :: Boolean
+  -- | The initial mode to use.
+  -- | If set to 'Typing', the typewriter state will start with empty text.
+  -- | If set to 'Deleting', the typewriter will display the first word, and then start backspacing.
+  , initialMode :: Mode
   }
 
 -- | Current typewriter mode.
@@ -104,6 +110,7 @@ defaultTypewriter =
   , cursorDelay: Milliseconds 700.0
   , cursor: text "|"
   , jitter: randomRange 0.9 1.1
+  , initialMode: Typing
   }
 
 -- | Possible outputs for 'typewriter'.
@@ -118,8 +125,12 @@ typewriter :: ∀ q m. MonadAff m => Component q (Input m) Output m
 typewriter = mkComponent { initialState, render, eval }
   where
   initialState input =
-    { words: input.words
-    , outputText: mempty
+    { words: case input.initialMode of
+        Typing -> input.words
+        Deleting -> fold $ tail input.words
+    , outputText: case input.initialMode of
+        Typing -> mempty
+        Deleting -> fold $ head input.words
     , typeDelay: input.typeDelay
     , deleteDelay: input.deleteDelay
     , pauseDelay: input.pauseDelay
@@ -129,6 +140,7 @@ typewriter = mkComponent { initialState, render, eval }
     , cursorHidden: true
     , jitter: input.jitter
     , running: true
+    , initialMode: input.initialMode
     }
   eval = mkEval defaultEval { handleAction = handleAction, initialize = Just Initialize }
 
@@ -148,7 +160,9 @@ typewriter = mkComponent { initialState, render, eval }
           [ state.cursor ]
       ]
 
-  sleep modifyDelay field = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< view field =<< get
+  sleepWith modifyDelay field = liftAff <<< delay <<< Milliseconds <<< modifyDelay <<< unwrap <<< view field =<< get
+  sleep = sleepWith identity
+
   handleAction = case _ of
     Initialize -> do
       { emitter, listener } <- liftEffect create
@@ -160,7 +174,7 @@ typewriter = mkComponent { initialState, render, eval }
       when state.running $ do
         when (state.mode == Typing) $
           cursorHidden %= not
-        sleep identity cursorDelay
+        sleep cursorDelay
         handleAction UpdateCursor
     UpdateState -> get >>= \state ->
       case head state.words of
@@ -175,18 +189,18 @@ typewriter = mkComponent { initialState, render, eval }
                 Nothing -> do
                   -- Delete the current word from state.words.
                   words %= fold <<< tail
-                  sleep identity pauseDelay
+                  sleep pauseDelay
                   void $ modify $ _ { mode = Deleting, cursorHidden = false }
                 Just letter -> do
                   coefficient <- liftEffect state.jitter
-                  sleep (_ * coefficient) typeDelay
+                  sleepWith (_ * coefficient) typeDelay
                   -- Add the next letter to outputText.
                   outputText <>= singleton letter
             Deleting ->
               -- When outputText is empty, start typing.
               if null state.outputText then mode .= Typing
               else do
-                sleep identity deleteDelay
+                sleep deleteDelay
                 -- Remove the last letter of outputText.
                 -- It's unfortunate the 'init' function doesn't exist for strings!
                 outputText %= take (length state.outputText - 1)
